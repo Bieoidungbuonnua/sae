@@ -45,6 +45,25 @@ return (function()
 		until os.clock() >= deadline
 		return false
 	end
+	local function findGrantedEgg(snapshot, target, previous)
+		local inventory = snapshot.EggInventory
+		if type(inventory) ~= "table" then
+			return nil
+		end
+		if inventory[target.Uid] then
+			return target.Uid
+		end
+		for uid, egg in pairs(inventory) do
+			if
+				not previous[uid]
+				and egg.AssetCategory == target.AssetCategory
+				and egg.AssetScale == target.AssetScale
+			then
+				return uid
+			end
+		end
+		return nil
+	end
 	do
 		do
 			local fn45, fn46, fn47
@@ -511,6 +530,7 @@ return (function()
 							tbl18.TrailsDir = fn51("Data", "Trails")
 							tbl18.TreadmillsDir = fn51("Data", "Treadmills")
 							tbl18.AssetsDir = fn51("Data", "Assets")
+							tbl18.AssetItems = fn51("Shared", "Util", "AssetItems")
 							tbl18.AreasDir = fn51("Data", "Areas")
 							tbl18.EggState = fn51("Client", "EggState")
 							tbl18.BaseUpgrade = fn51("Client", "BaseUpgrade")
@@ -1787,7 +1807,8 @@ return (function()
 							end
 
 							if arg2.MaxKG and arg2.MaxKG > 0 then
-								if arg2.MaxKG < (arg.Scale or 0) then
+								local ok, weight = pcall(tbl18.AssetItems.WeightKg, arg)
+								if not ok or typeof(weight) ~= "number" or arg2.MaxKG < weight then
 									return false
 								end
 							end
@@ -2512,6 +2533,11 @@ return (function()
 					if not v77 then
 						return false, "No HumanoidRootPart"
 					end
+					local previousEggs = {}
+					local snapshot = tbl18.Save.Peek()
+					for uid in pairs(snapshot and snapshot.EggInventory or {}) do
+						previousEggs[uid] = true
+					end
 					local stealReturnPosition = tbl20.StealReturnPosition
 					local position = arg.Position
 					local stealHeightOffset = tbl20.StealHeightOffset
@@ -2616,7 +2642,16 @@ return (function()
 						end
 						fn49(false)
 						fn56("carried", arg.Uid)
-						local v97, v98 = fn59(arg.Uid)
+						local grantedUid
+						if
+							not waitForSave(function(current)
+								grantedUid = findGrantedEgg(current, arg, previousEggs)
+								return grantedUid ~= nil
+							end)
+						then
+							return false, "Carried egg was not confirmed in inventory"
+						end
+						local v97, v98 = fn59(grantedUid)
 						fn56("equip result", v97, v98)
 						return true, arg.Name
 					end
@@ -3486,6 +3521,13 @@ return (function()
 												local v88 = tbl24[n31]
 												n31 += 1
 												v87 += 1
+												local placePosition = v77.CenterPoint.CFrame:PointToWorldSpace(
+													v88.Position
+												) + Vector3.new(0, 3, 0)
+												local moved, moveReason = fn64(placePosition)
+												if not moved then
+													return v83, moveReason or "Could not reach egg placement position"
+												end
 												local response2, v89
 
 												if tbl18.EggCmds.RequestPlaceEgg then
