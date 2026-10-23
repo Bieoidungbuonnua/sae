@@ -737,6 +737,20 @@ return (function()
 
 							environment.StealAnEgg = environment.StealAnEgg or {}
 							stealAnEgg = environment.StealAnEgg
+							do
+								local config = environment.Config
+								local misc = type(config) == "table" and config.Misc
+								if type(misc) == "table" then
+									for _, name in { "Optimization", "Hide Ui" } do
+										if type(misc[name]) == "boolean" then
+											stealAnEgg[name] = misc[name]
+										end
+									end
+								end
+							end
+							if stealAnEgg.Optimization == nil then
+								stealAnEgg.Optimization = true
+							end
 							if stealAnEgg["Hide Ui"] == nil then
 								stealAnEgg["Hide Ui"] = true
 							end
@@ -1326,7 +1340,7 @@ return (function()
 						end
 
 						fn34 = function()
-							if stealAnEgg["Hide Ui"] == true then
+							if stealAnEgg.Optimization == false then
 								tbl17.RunService:Set3dRenderingEnabled(true)
 								return
 							end
