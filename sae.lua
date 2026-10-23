@@ -1,5 +1,32 @@
 return (function()
 	local environment = getgenv()
+	do
+		local fpsCapState = {}
+		environment.__SkiderSaeFpsCap = fpsCapState
+		local function applyFpsCap()
+			local config = environment.Config
+			local misc = type(config) == "table" and config.Misc
+			local cap = type(misc) == "table" and misc["FPS Cap"] or nil
+			if cap == nil then
+				local legacy = environment.StealAnEgg
+				cap = type(legacy) == "table" and legacy["FPS Cap"] or nil
+			end
+			cap = tonumber(cap)
+			if cap and cap == cap and cap >= 0 and cap < math.huge then
+				pcall(setfpscap, cap)
+			end
+		end
+		applyFpsCap()
+		task.spawn(function()
+			while environment.__SkiderSaeFpsCap == fpsCapState do
+				task.wait(5)
+				if environment.__SkiderSaeFpsCap ~= fpsCapState then
+					break
+				end
+				applyFpsCap()
+			end
+		end)
+	end
 	local syn = environment.syn
 	local fluxus = environment.fluxus
 
@@ -909,6 +936,31 @@ return (function()
 								Position = compact and UDim2.new(1, -18, 1, -18) or UDim2.fromScale(0.5, 0.5),
 								Size = compact and UDim2.fromOffset(360, 370) or UDim2.fromScale(1, 1),
 							})
+							local fps = create("TextLabel", "FPS", viewport, {
+								AnchorPoint = Vector2.new(1, 0),
+								BackgroundColor3 = Color3.fromRGB(10, 14, 11),
+								BorderColor3 = green,
+								BorderSizePixel = 2,
+								Position = UDim2.new(1, -18, 0, 18),
+								Size = UDim2.fromOffset(124, 30),
+								ZIndex = 3,
+								Font = Enum.Font.FredokaOne,
+								Text = "FPS: ...",
+								TextColor3 = green,
+								TextSize = 18,
+							})
+							local frames, elapsed = 0, 0
+							local fpsConnection = tbl17.RunService.RenderStepped:Connect(function(deltaTime)
+								frames += 1
+								elapsed += deltaTime
+								if elapsed >= 0.25 then
+									fps.Text = ("FPS: %d"):format(math.floor(frames / elapsed + 0.5))
+									frames, elapsed = 0, 0
+								end
+							end)
+							fps.Destroying:Once(function()
+								fpsConnection:Disconnect()
+							end)
 
 							if compact then
 								local scale = create("UIScale", "ResponsiveScale", frame)
@@ -949,7 +1001,7 @@ return (function()
 								return result
 							end
 
-							label("Title", brand, 12, 36, 0.1, 0.13, 24, green)
+							label("Title", brand, 12, 36, 0.14, 0.1, 24, green)
 							local session = label("SessionTime", "Session Time: Loading", 56, 22, 0.27, 0.116130508, 16)
 							local zone = label("Current Zone", tbl21.ui.Mode, 84, 26, 0.376230229, 0.09, 18, green)
 							local info = label("Info", "Loading...", 124, 166, 0.56, 0.24, 15)
@@ -966,6 +1018,7 @@ return (function()
 								LastTask = lastTask,
 								SessionTime = session,
 								CurrentZone = zone,
+								FPS = fps,
 								Compact = compact,
 							}
 						end
