@@ -34,6 +34,17 @@ return (function()
 	local tbl17, tbl18, tbl19, tbl20, tbl21, fn26, fn27, stealAnEgg, fn28
 	local fn29, fn30, fn31, fn32, fn33, fn34, fn35, fn36, fn37, fn38
 	local fn39, fn40, fn41, fn42, fn43, fn44
+	local function waitForSave(predicate, timeout)
+		local deadline = os.clock() + (timeout or 5)
+		repeat
+			local snapshot = tbl18.Save.Peek()
+			if snapshot and predicate(snapshot) then
+				return true
+			end
+			task.wait(0.1)
+		until os.clock() >= deadline
+		return false
+	end
 	do
 		do
 			local fn45, fn46, fn47
@@ -1493,9 +1504,17 @@ return (function()
 										end
 									else
 										local v77
+										local previousLevel = v76.BaseUpgradeLevel
 										v77, v75 = fn47()
 										if not v77 then
 											break
+										end
+										if
+											not waitForSave(function(snapshot)
+												return snapshot.BaseUpgradeLevel > previousLevel
+											end)
+										then
+											return n31, "Base upgrade was not confirmed"
 										end
 										n31 += 1
 										task.wait(0.2)
@@ -1574,9 +1593,17 @@ return (function()
 										return n31, ("Done, level: %d"):format(tbl18.Save.Peek().TreadmillUpgradeLevel)
 									end
 									local v77
+									local previousLevel = v76.TreadmillUpgradeLevel
 									v77, v75 = fn48()
 									if not v77 then
 										break
+									end
+									if
+										not waitForSave(function(snapshot)
+											return snapshot.TreadmillUpgradeLevel > previousLevel
+										end)
+									then
+										return n31, "Treadmill upgrade was not confirmed"
 									end
 									n31 += 1
 									task.wait(0.2)
@@ -1850,6 +1877,14 @@ return (function()
 									break
 								end
 								tbl19.SellPet:FireServer({ toolNotFoundForUid })
+								if
+									not waitForSave(function(snapshot)
+										return type(snapshot.Inventory) == "table"
+											and snapshot.Inventory[toolNotFoundForUid] == nil
+									end)
+								then
+									return n31, "Sale was not confirmed for uid: " .. toolNotFoundForUid
+								end
 								n31 += 1
 								task.wait(0.5)
 							end
@@ -2600,6 +2635,7 @@ return (function()
 					fn29("Scanning steal targets...")
 					fn57("autoStealEggs start")
 					local v75 = 0
+					local processed = {}
 					local v76
 
 					while true do
@@ -2613,7 +2649,7 @@ return (function()
 							local v79 = nil
 
 							for _, v80 in ipairs(fn41()) do
-								if fn55(v80) and v80.Position then
+								if v80.Uid and not processed[v80.Uid] and fn55(v80) and v80.Position then
 									v79 = v80
 									break
 								else
@@ -2629,11 +2665,17 @@ return (function()
 								return v75, ("Stolen %d eggs"):format(v75)
 							end
 
-							local v80
-							v80, v76 = fn60(v79)
+							local ok, v80, result = pcall(fn60, v79)
+							stealAnEgg.ForceStealPosition = nil
+							fn49(false)
+							v76 = ok and result or tostring(v80)
+							if not ok then
+								break
+							end
 							if not v80 then
 								break
 							end
+							processed[v79.Uid] = true
 							v75 += 1
 							task.wait(0.3)
 						end
@@ -2649,9 +2691,13 @@ return (function()
 
 			do
 				do
-					fn55 = function(arg)
+					fn55 = function(arg, uid)
 						if arg.Placement == nil then
 							return false
+						end
+						if typeof(tbl18.EggState.IsReadyToHatch) == "function" then
+							local ok, ready = pcall(tbl18.EggState.IsReadyToHatch, uid)
+							return ok and ready == true
 						end
 						local serverTimeNow = tbl17.Workspace:GetServerTimeNow()
 						local readyAt = arg.Placement.ReadyAt
@@ -3103,7 +3149,7 @@ return (function()
 				local tbl22 = {}
 
 				for k, v76 in pairs(v75) do
-					if fn55(v76) then
+					if fn55(v76, k) then
 						table.insert(tbl22, k)
 					end
 				end
@@ -3111,14 +3157,21 @@ return (function()
 				local n31 = 0
 
 				for _, v76 in ipairs(tbl22) do
-					local v77, v78 = tbl18.PlacedEggRenderer.ActivateLocalEgg(v76)
+					local ok, v77, v78 = pcall(tbl18.PlacedEggRenderer.ActivateLocalEgg, v76)
 
-					if v77 then
-						n31 += 1
-						task.wait(0.1)
-						tbl18.PlacedEggRenderer.Refresh()
+					if ok and v77 then
+						if
+							waitForSave(function(snapshot)
+								return type(snapshot.EggInventory) == "table" and snapshot.EggInventory[v76] == nil
+							end)
+						then
+							n31 += 1
+						else
+							warn("[HatchEggs] completion was not confirmed", v76)
+						end
+						pcall(tbl18.PlacedEggRenderer.Refresh)
 					else
-						warn("[HatchEggs] failed", v76, v78)
+						warn("[HatchEggs] failed", v76, ok and v78 or v77)
 						task.wait(0.3)
 					end
 				end
@@ -3993,30 +4046,25 @@ return (function()
 
 		fn65 = function()
 			fn30("Maintenance")
-			fn29("Equip best trail")
-			local v75, v76 = fn35()
-			warn("[Trail]", v75, v76)
-			fn29("Upgrade base")
-			local v77, v78 = fn36()
-			warn("[BaseUpgrade] Upgraded", v77, "times:", v78)
-			fn29("Upgrade treadmill")
-			local v79, v80 = fn37()
-			warn("[Treadmill] Upgraded", v79, "times:", v80)
-			fn29("Sell pets")
-			local v81, v82 = fn39()
-			warn("[Sell]", v81, v82)
-			fn29("Place eggs")
-			local v83, v84 = fn55()
-			warn("[PlaceEggs]", v83, v84)
-			fn29("Hatch eggs")
-			local v85, v86 = fn53()
-			warn("[HatchEggs]", v85, v86)
-			fn29("Claim index rewards")
-			local v87, v88 = fn56()
-			warn("[Index]", v87, v88)
-			fn29("Claim offline money")
-			local v89, v90 = fn57()
-			warn("[Offline]", v89, v90)
+			local function runStep(taskName, tag, callback, upgrade)
+				fn29(taskName)
+				local ok, result, reason = pcall(callback)
+				if not ok then
+					warn(tag, "failed:", result)
+				elseif upgrade then
+					warn(tag, "Upgraded", result, "times:", reason)
+				else
+					warn(tag, result, reason)
+				end
+			end
+			runStep("Equip best trail", "[Trail]", fn35)
+			runStep("Upgrade base", "[BaseUpgrade]", fn36, true)
+			runStep("Upgrade treadmill", "[Treadmill]", fn37, true)
+			runStep("Sell pets", "[Sell]", fn39)
+			runStep("Place eggs", "[PlaceEggs]", fn55)
+			runStep("Hatch eggs", "[HatchEggs]", fn53)
+			runStep("Claim index rewards", "[Index]", fn56)
+			runStep("Claim offline money", "[Offline]", fn57)
 			fn29("Idle")
 		end
 
@@ -4138,44 +4186,53 @@ Steal match:  %d (%d rules)]],
 	do
 		local function fn66()
 			while true do
-				local flag14 = #stealAnEgg.StealEggs > 0 and fn45()
-				local v75, v76 = fn43()
+				local ok, failure = pcall(function()
+					local flag14 = #stealAnEgg.StealEggs > 0 and fn45()
+					local v75, v76 = fn43()
 
-				if flag14 and v75 then
-					fn30("Steal Mode")
-					fn29("Scanning steal targets...")
-					local v77, v78 = fn51()
-					warn("[StealEggs]", v77, v78)
-					fn65()
-				elseif #stealAnEgg.StealEggs > 0 and (not flag14 or not v75) then
-					if not v75 then
+					if flag14 and v75 then
+						fn30("Steal Mode")
+						fn29("Scanning steal targets...")
+						local v77, v78 = fn51()
+						warn("[StealEggs]", v77, v78)
+						fn65()
+					elseif #stealAnEgg.StealEggs > 0 and (not flag14 or not v75) then
+						if not v75 then
+							fn30("Farm Mode")
+							fn29(("Cycle soon: %s"):format(tostring(v76)))
+							warn("[StealEggs] skip:", v76)
+							warn("[AutoTM] cycle soon — farm until day change")
+						else
+							fn30("Farm Mode")
+							fn29("No matching eggs — farming...")
+							warn("[StealEggs] no matching eggs — farm until day change")
+						end
+
+						local v77, v78 = fn63()
+						warn("[AutoTM]", v77, v78)
+						local v79, v80 = fn64()
+						warn("[StealEggs][ASAP]", v79, v80)
+						fn65()
+					elseif tbl20.AutoTreadmill then
 						fn30("Farm Mode")
-						fn29(("Cycle soon: %s"):format(tostring(v76)))
-						warn("[StealEggs] skip:", v76)
-						warn("[AutoTM] cycle soon — farm until day change")
+						fn29("No StealEggs config — farming...")
+						warn("[AutoTM] no StealEggs config — farming until cycle")
+						local v77, v78 = fn63()
+						warn("[AutoTM]", v77, v78)
+						fn65()
 					else
-						fn30("Farm Mode")
-						fn29("No matching eggs — farming...")
-						warn("[StealEggs] no matching eggs — farm until day change")
+						fn30("Idle")
+						fn29("Waiting...")
+						fn65()
+						task.wait(tbl20.MainLoopWait)
 					end
-
-					local v77, v78 = fn63()
-					warn("[AutoTM]", v77, v78)
-					local v79, v80 = fn64()
-					warn("[StealEggs][ASAP]", v79, v80)
-					fn65()
-				elseif tbl20.AutoTreadmill then
-					fn30("Farm Mode")
-					fn29("No StealEggs config — farming...")
-					warn("[AutoTM] no StealEggs config — farming until cycle")
-					local v77, v78 = fn63()
-					warn("[AutoTM]", v77, v78)
-					fn65()
-				else
-					fn30("Idle")
-					fn29("Waiting...")
-					fn65()
-					task.wait(tbl20.MainLoopWait)
+				end)
+				if not ok then
+					stealAnEgg.ForceStealPosition = nil
+					pcall(fn49, false)
+					fn30("Recovering")
+					fn29("Retrying after an error...")
+					warn("[StealAnEgg] Main loop failed:", failure)
 				end
 
 				task.wait(tbl20.MainLoopWait)
