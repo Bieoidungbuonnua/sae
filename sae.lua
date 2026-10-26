@@ -412,14 +412,14 @@ return (function()
 							end)
 						)
 
-						local n31 = os.clock() + 30
+						local n31 = os.clock() + 60
 
 						while not (tbl22.bacInstalled and tbl22.perFrameHooked) do
 							if os.clock() >= n31 then
-								error("Movement hook was not found within 30 seconds")
+								error("Movement hook was not found within 60 seconds")
 							end
+							task.wait(2)
 							fn51()
-							task.wait(0.5)
 						end
 					end
 
@@ -691,7 +691,7 @@ return (function()
 								local v77 = tbl17.Workspace:FindFirstChild("Plots")
 								v77 = v77 and v77:FindFirstChild(tostring(v76))
 								local v78 = v77 and (v77:FindFirstChild("ToUpdate") or v77)
-								local centerPoint = v78 and v78:FindFirstChild("CenterPoint")
+								local centerPoint = v77 and (v77:FindFirstChild("CenterPoint") or (v78 and v78:FindFirstChild("CenterPoint")))
 								v78 = v78 and v78:FindFirstChild("PetArea")
 								if not v77 or not centerPoint or not v78 then
 									warn("[PlotData] missing plot parts for slot", v76)
@@ -923,135 +923,129 @@ return (function()
 						end
 
 						fn33 = function()
-							local compact = stealAnEgg["Hide Ui"] == true
-							local brand = "SKIDER SAE KAITUN"
-							local green = Color3.fromRGB(83, 230, 119)
-							local textColor = Color3.fromRGB(211, 240, 218)
-							local previous = tbl21.ui.UI
-							if previous and previous.Gui then
-								previous.Gui:Destroy()
-							end
-							for _, child in tbl17.LocalPlayer.PlayerGui:GetChildren() do
-								if child:IsA("ScreenGui") and (child.Name == brand or child.Name == "Hikko") then
-									child:Destroy()
+							local createUI = function(context)
+								local player = context.Player
+								local compact = context.Compact == true
+								local brand = "SKIDER SAE KAITUN"
+								local green = Color3.fromRGB(83, 230, 119)
+								local text = Color3.fromRGB(224, 239, 229)
+								local muted = Color3.fromRGB(133, 163, 145)
+								local family = "rbxasset://fonts/families/Sarpanch.json"
+								local regular = Font.new(family, Enum.FontWeight.Bold)
+								local heavy = Font.new(family, Enum.FontWeight.Heavy)
+								local function create(className, name, parent, properties)
+									local instance = Instance.new(className)
+									instance.Name = name
+									for key, value in pairs(properties or {}) do instance[key] = value end
+									instance.Parent = parent
+									return instance
 								end
-							end
-
-							local function create(className, name, parent, properties)
-								local instance = Instance.new(className)
-								instance.Name = name
-								for key, value in pairs(properties or {}) do
-									instance[key] = value
+								for _, child in player.PlayerGui:GetChildren() do
+									if child:IsA("ScreenGui") and (child.Name == brand or child.Name == "Hikko") then child:Destroy() end
 								end
-								instance.Parent = parent
-								return instance
-							end
-
-							local gui = create("ScreenGui", brand, tbl17.LocalPlayer.PlayerGui, {
-								ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-								DisplayOrder = 999,
-								IgnoreGuiInset = true,
-								Enabled = true,
-								ResetOnSpawn = false,
-							})
-							local viewport = create("Frame", "Viewport", gui, {
-								BackgroundTransparency = 1,
-								BorderSizePixel = 0,
-								Size = UDim2.fromScale(1, 1),
-							})
-							local frame = create("Frame", "Main", viewport, {
-								AnchorPoint = compact and Vector2.new(1, 1) or Vector2.new(0.5, 0.5),
-								BackgroundColor3 = Color3.fromRGB(10, 14, 11),
-								BorderColor3 = green,
-								BorderSizePixel = 3,
-								Position = compact and UDim2.new(1, -18, 1, -18) or UDim2.fromScale(0.5, 0.5),
-								Size = compact and UDim2.fromOffset(360, 370) or UDim2.fromScale(1, 1),
-							})
-							local fps = create("TextLabel", "FPS", viewport, {
-								AnchorPoint = Vector2.new(1, 0),
-								BackgroundColor3 = Color3.fromRGB(10, 14, 11),
-								BorderColor3 = green,
-								BorderSizePixel = 2,
-								Position = UDim2.new(1, -18, 0, 18),
-								Size = UDim2.fromOffset(124, 30),
-								ZIndex = 3,
-								Font = Enum.Font.FredokaOne,
-								Text = "FPS: ...",
-								TextColor3 = green,
-								TextSize = 18,
-							})
-							local frames, elapsed = 0, 0
-							local fpsConnection = tbl17.RunService.RenderStepped:Connect(function(deltaTime)
-								frames += 1
-								elapsed += deltaTime
-								if elapsed >= 0.25 then
-									fps.Text = ("FPS: %d"):format(math.floor(frames / elapsed + 0.5))
-									frames, elapsed = 0, 0
-								end
-							end)
-							fps.Destroying:Once(function()
-								fpsConnection:Disconnect()
-							end)
-
-							if compact then
-								local scale = create("UIScale", "ResponsiveScale", frame)
-								local function fit()
-									local size = viewport.AbsoluteSize
-									scale.Scale =
-										math.min(1, math.max(size.X - 36, 1) / 360, math.max(size.Y - 36, 1) / 370)
-								end
-								local connection = viewport:GetPropertyChangedSignal("AbsoluteSize"):Connect(fit)
-								gui.Destroying:Once(function()
-									connection:Disconnect()
-								end)
-								fit()
-							end
-
-							local function label(name, text, y, height, largeY, largeHeight, textSize, color)
-								local result = create("TextLabel", name, frame, {
-									AnchorPoint = compact and Vector2.new(0, 0) or Vector2.new(0.5, 0.5),
-									BackgroundTransparency = 1,
-									BorderSizePixel = 0,
-									Position = compact and UDim2.fromOffset(16, y) or UDim2.fromScale(0.5, largeY),
-									Size = compact and UDim2.new(1, -32, 0, height)
-										or UDim2.fromScale(0.78, largeHeight),
-									ZIndex = 2,
-									Font = Enum.Font.FredokaOne,
-									Text = text,
-									TextColor3 = color or textColor,
-									TextScaled = true,
-									TextSize = compact and textSize or 100,
-									TextWrapped = true,
+								local gui = create("ScreenGui", brand, player.PlayerGui, {
+									ZIndexBehavior = Enum.ZIndexBehavior.Sibling, DisplayOrder = 999,
+									IgnoreGuiInset = true, Enabled = true, ResetOnSpawn = false,
 								})
-								if compact then
-									create("UITextSizeConstraint", "TextSize", result, {
-										MinTextSize = 10,
-										MaxTextSize = textSize,
+								local viewport = create("Frame", "Viewport", gui, {
+									BackgroundTransparency = 1, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1),
+								})
+								local frame = create("Frame", "Main", viewport, {
+									AnchorPoint = compact and Vector2.new(0.5, 0) or Vector2.new(0.5, 0.5),
+									BackgroundColor3 = Color3.fromRGB(8, 16, 12), BackgroundTransparency = 0.04,
+									BorderColor3 = Color3.fromRGB(46, 120, 70), BorderSizePixel = 1,
+									Position = compact and UDim2.new(0.5, 0, 0, 18) or UDim2.fromScale(0.5, 0.5),
+									Size = compact and UDim2.fromOffset(480, 246) or UDim2.fromScale(1, 1),
+								})
+								local function label(name, value, x, y, width, height, size, color, font)
+									return create("TextLabel", name, frame, {
+										BackgroundTransparency = 1, BorderSizePixel = 0,
+										Position = UDim2.fromOffset(x, y), Size = UDim2.fromOffset(width, height),
+										FontFace = font or regular, Text = value, TextColor3 = color or text,
+										TextSize = size, TextXAlignment = Enum.TextXAlignment.Left,
+										TextYAlignment = Enum.TextYAlignment.Center, ZIndex = 2,
 									})
 								end
-								return result
+								local session, zone, info, lastTask
+								local stats = {}
+								if compact then
+									create("Frame", "Accent", frame, {
+										BackgroundColor3 = green, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 3),
+									})
+									label("Title", brand, 16, 9, 320, 30, 23, green, heavy)
+									session = label("SessionTime", "0s", 338, 14, 126, 22, 14, muted)
+									session.TextXAlignment = Enum.TextXAlignment.Right
+									zone = label("Current Zone", context.Mode or "SPEED FIRST", 16, 42, 448, 24, 16, text, heavy)
+									create("Frame", "HeaderLine", frame, {
+										BackgroundColor3 = Color3.fromRGB(36, 66, 46), BorderSizePixel = 0,
+										Position = UDim2.fromOffset(16, 72), Size = UDim2.fromOffset(448, 1),
+									})
+									local function stat(key, caption, column, row)
+										local x, y = 16 + column * 152, 82 + row * 48
+										label(key .. "Caption", caption, x, y, 144, 16, 12, muted)
+										stats[key] = label(key, "--", x, y + 16, 144, 26, 21, text, heavy)
+									end
+									stat("Cash", "CASH", 0, 0)
+									stat("Speed", "SPEED", 1, 0)
+									stat("Treadmill", "TREADMILL", 2, 0)
+									stat("Plot", "PLOT", 0, 1)
+									stat("Cycle", "CYCLE", 1, 1)
+									stat("Targets", "READY EGGS", 2, 1)
+									stats.Speed.TextColor3 = green
+									info = label("Info", "Preparing farm targets...", 16, 181, 448, 20, 13, muted)
+									info.TextTruncate = Enum.TextTruncate.AtEnd
+									create("Frame", "TaskBackground", frame, {
+										BackgroundColor3 = Color3.fromRGB(14, 29, 20), BorderSizePixel = 0,
+										Position = UDim2.fromOffset(0, 207), Size = UDim2.new(1, 0, 0, 39),
+									})
+									lastTask = label("LastTask", context.Task or "Starting...", 16, 211, 448, 30, 14, text)
+									lastTask.TextWrapped = true
+									local scale = create("UIScale", "ResponsiveScale", frame)
+									local function fit()
+										local size = viewport.AbsoluteSize
+										scale.Scale = math.min(1, math.max(size.X - 32, 1) / 480, math.max(size.Y - 36, 1) / 246)
+									end
+									local connection = viewport:GetPropertyChangedSignal("AbsoluteSize"):Connect(fit)
+									gui.Destroying:Once(function() connection:Disconnect() end)
+									fit()
+								else
+									local function large(name, value, y, height, color)
+										return create("TextLabel", name, frame, {
+											AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1,
+											BorderSizePixel = 0, Position = UDim2.fromScale(0.5, y), Size = UDim2.fromScale(0.78, height),
+											FontFace = heavy, Text = value, TextColor3 = color or text,
+											TextScaled = true, TextWrapped = true, ZIndex = 2,
+										})
+									end
+									large("Title", brand, 0.14, 0.1, green)
+									session = large("SessionTime", "Session Time: Loading", 0.27, 0.116)
+									zone = large("Current Zone", context.Mode or "Steal An Egg", 0.376, 0.09, green)
+									info = large("Info", "Loading...", 0.56, 0.24)
+									info.TextYAlignment = Enum.TextYAlignment.Top
+									lastTask = large("LastTask", context.Task or "Starting...", 0.79, 0.11)
+									large("Username", player.Name, 0.947, 0.05)
+								end
+								local fps = create("TextLabel", "FPS", viewport, {
+									AnchorPoint = Vector2.new(1, 0), BackgroundColor3 = Color3.fromRGB(8, 16, 12),
+									BorderColor3 = Color3.fromRGB(46, 120, 70), BorderSizePixel = 1,
+									Position = UDim2.new(1, -18, 0, 18), Size = UDim2.fromOffset(112, 28),
+									FontFace = heavy, Text = "FPS: ...", TextColor3 = green, TextSize = 17, ZIndex = 3,
+								})
+								local frames, elapsed = 0, 0
+								local fpsConnection = context.RunService.RenderStepped:Connect(function(dt)
+									frames += 1
+									elapsed += dt
+									if elapsed >= 0.25 then
+										fps.Text = ("FPS: %d"):format(math.floor(frames / elapsed + 0.5))
+										frames, elapsed = 0, 0
+									end
+								end)
+								fps.Destroying:Once(function() fpsConnection:Disconnect() end)
+								return {Gui = gui, Whole = frame, Info = info, LastTask = lastTask, SessionTime = session,
+									CurrentZone = zone, FPS = fps, Compact = compact, Stats = stats}
 							end
-
-							label("Title", brand, 12, 36, 0.14, 0.1, 24, green)
-							local session = label("SessionTime", "Session Time: Loading", 56, 22, 0.27, 0.116130508, 16)
-							local zone = label("Current Zone", tbl21.ui.Mode, 84, 26, 0.376230229, 0.09, 18, green)
-							local info = label("Info", "Loading...", 124, 166, 0.56, 0.24, 15)
-							info.TextYAlignment = Enum.TextYAlignment.Top
-							local lastTask =
-								label("LastTask", "Task: " .. tbl21.ui.CurrentTask, 300, 38, 0.79, 0.11, 14)
-							lastTask.TextYAlignment = Enum.TextYAlignment.Top
-							label("Username", tbl17.LocalPlayer.Name, 342, 18, 0.947248161, 0.05, 13)
-
-							tbl21.ui.UI = {
-								Gui = gui,
-								Whole = frame,
-								Info = info,
-								LastTask = lastTask,
-								SessionTime = session,
-								CurrentZone = zone,
-								FPS = fps,
-								Compact = compact,
-							}
+							tbl21.ui.UI = createUI({Player=tbl17.LocalPlayer,RunService=tbl17.RunService,
+								Compact=stealAnEgg["Hide Ui"]==true,Mode=tbl21.ui.Mode,Task="Task: "..tbl21.ui.CurrentTask})
 						end
 
 						tbl21.petRenderDisabled = false
@@ -1125,7 +1119,6 @@ return (function()
 								end
 								tbl21.petRenderDisabled = true
 								fn51()
-								fn50()
 								warn("[Optimize] pet render disabled (visual hide only)")
 							end
 						end
@@ -1148,38 +1141,61 @@ return (function()
 						end
 
 						local function fn50()
+
+
+							local config = environment.Config
+							local misc = type(config) == "table" and config.Misc
+							local fpsCap = type(misc) == "table" and tonumber(misc["FPS Cap"]) or nil
+							if not fpsCap then
+								fpsCap = tonumber(stealAnEgg["FPS Cap"])
+							end
+							local workBudget = fpsCap and fpsCap > 0 and fpsCap <= 15 and 0.012 or 0.005
+							local sliceStart = os.clock()
+							local sliceChecks = 0
+							local function slice()
+
+
+								sliceChecks += 1
+								if sliceChecks < 4 then
+									return
+								end
+								sliceChecks = 0
+								if os.clock() - sliceStart >= workBudget then
+									task.wait()
+									sliceStart = os.clock()
+								end
+							end
+							warn(("[Optimize] budget %.0fms/frame (FPS cap: %s)"):format(workBudget * 1000, tostring(fpsCap or "default")))
+
 							local playerScripts = tbl17.LocalPlayer:FindFirstChild("PlayerScripts")
-
 							if playerScripts then
-								local tbl22 = {}
-
 								for _, descendant in ipairs(playerScripts:GetDescendants()) do
-									if descendant:IsA("LocalScript") and not tbl22[descendant.Name] then
-										descendant.Disabled = true
+									if descendant:IsA("LocalScript") then
+										pcall(function()
+											descendant.Disabled = true
+										end)
 									end
+									slice()
 								end
 							end
 
 							local terrain = tbl17.Workspace:FindFirstChildOfClass("Terrain")
-
 							pcall(function()
-								UserSettings():GetService("UserGameSettings").SavedQualityLevel =
-									Enum.SavedQualitySetting.QualityLevel1
+								UserSettings():GetService("UserGameSettings").SavedQualityLevel = Enum.SavedQualitySetting.QualityLevel1
 								UserSettings():GetService("UserGameSettings").MasterVolume = 0
-								local level012 = Enum.QualityLevel.Level01
-								settings().Rendering.QualityLevel = level012
-								local level04 = Enum.MeshPartDetailLevel.Level04
-								settings().Rendering.MeshPartDetailLevel = level04
-
-								if terrain then
+								settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+								settings().Rendering.MeshPartDetailLevel = Enum.MeshPartDetailLevel.Level04
+								if terrain and type(sethiddenproperty) == "function" then
 									sethiddenproperty(terrain, "Decoration", false)
 								end
-
-								sethiddenproperty(tbl17.Lighting, "Technology", 2)
+								if type(sethiddenproperty) == "function" then
+									sethiddenproperty(tbl17.Lighting, "Technology", 2)
+								end
 							end)
 
 							for _, child in ipairs(tbl17.Lighting:GetChildren()) do
-								child:Destroy()
+								pcall(function() child:Destroy() end)
+								slice()
 							end
 
 							pcall(function()
@@ -1193,53 +1209,45 @@ return (function()
 							end)
 
 							if terrain then
-								terrain.WaterWaveSize = 0
-								terrain.WaterWaveSpeed = 0
-								terrain.WaterReflectance = 0
-								terrain.WaterTransparency = 1
+								pcall(function()
+									terrain.WaterWaveSize = 0
+									terrain.WaterWaveSpeed = 0
+									terrain.WaterReflectance = 0
+									terrain.WaterTransparency = 1
+								end)
 							end
 
 							local function fn51(arg)
 								if arg.Name == "SKIDER SAE KAITUN" then
 									return
 								end
-
 								if arg:IsA("Workspace") then
-									if arg:FindFirstChildOfClass("Terrain") then
-										arg.Terrain.WaterWaveSize = 0
-										arg.Terrain.WaterWaveSpeed = 0
-										arg.Terrain.Elasticity = 0
-										arg.Terrain.WaterReflectance = 0
-										arg.Terrain.WaterTransparency = 1
+									local workspaceTerrain = arg:FindFirstChildOfClass("Terrain")
+									if workspaceTerrain then
+										workspaceTerrain.WaterWaveSize = 0
+										workspaceTerrain.WaterWaveSpeed = 0
+										workspaceTerrain.WaterReflectance = 0
+										workspaceTerrain.WaterTransparency = 1
+										if type(sethiddenproperty) == "function" then
+											pcall(sethiddenproperty, workspaceTerrain, "Decoration", false)
+										end
 									end
-
-									pcall(function()
-										sethiddenproperty(arg, "StreamingTargetRadius", 64)
-										sethiddenproperty(arg, "StreamingPauseMode", Enum.StreamingPauseMode.Disabled)
-
-										if arg:FindFirstChildOfClass("Terrain") then
-											sethiddenproperty(arg.Terrain, "Decoration", false)
-										end
-									end)
+									if type(sethiddenproperty) == "function" then
+										pcall(sethiddenproperty, arg, "StreamingTargetRadius", 64)
+										pcall(sethiddenproperty, arg, "StreamingPauseMode", Enum.StreamingPauseMode.Disabled)
+									end
 								elseif arg:IsA("Model") then
-									pcall(function()
-										do
-											sethiddenproperty(arg, "LevelOfDetail", 1)
-										end
-									end)
-								elseif
-									arg:IsA("TextButton")
-									or arg:IsA("TextLabel") and arg.Name ~= "Title"
-									or arg:IsA("ImageLabel")
-								then
+									if type(sethiddenproperty) == "function" then
+										pcall(sethiddenproperty, arg, "LevelOfDetail", 1)
+									end
+								elseif arg:IsA("Frame") then
+									arg.Visible = false
+								elseif arg:IsA("TextButton") or (arg:IsA("TextLabel") and arg.Name ~= "Title") or arg:IsA("ImageLabel") then
 									arg.Visible = false
 								elseif arg:IsA("BasePart") then
 									arg.Material = Enum.Material.Plastic
 									arg.Reflectance = 0
 									arg.Transparency = 1
-								elseif arg:IsA("MeshPart") then
-									arg.Transparency = 0
-									arg.CanCollide = false
 								elseif arg:IsA("Texture") or arg:IsA("Decal") then
 									arg.Texture = ""
 									arg.Transparency = 1
@@ -1247,16 +1255,11 @@ return (function()
 									arg.TextureId = ""
 								elseif arg:IsA("ShirtGraphic") then
 									arg.Graphic = ""
-								elseif arg:IsA("Lighting") then
-									arg.GlobalShadows = false
-									arg.FogEnd = 0
-									arg.Brightness = 0
 								elseif arg:IsA("Shirt") or arg:IsA("Pants") then
 									arg[arg.ClassName .. "Template"] = ""
 								elseif arg:IsA("ParticleEmitter") or arg:IsA("Trail") then
 									arg.Enabled = false
-								elseif
-									arg:IsA("BlurEffect")
+								elseif arg:IsA("BlurEffect")
 									or arg:IsA("SunRaysEffect")
 									or arg:IsA("ColorCorrectionEffect")
 									or arg:IsA("BloomEffect")
@@ -1271,14 +1274,11 @@ return (function()
 									or arg:IsA("Beam")
 									or arg:IsA("BillboardGui")
 									or arg:IsA("SurfaceGui")
-									or arg:IsA("ScreenGui")
-								then
+									or arg:IsA("ScreenGui") then
 									arg.Enabled = false
 								elseif arg:IsA("Highlight") then
-									do
-										arg.OutlineTransparency = 1
-										arg.FillTransparency = 1
-									end
+									arg.OutlineTransparency = 1
+									arg.FillTransparency = 1
 								elseif arg:IsA("Explosion") then
 									arg.BlastPressure = 0
 									arg.BlastRadius = 0
@@ -1293,134 +1293,110 @@ return (function()
 								end
 							end
 
-							local v75 = 0
+							local function visit(root, label)
 
-							for _, descendant in ipairs(tbl17.Workspace:GetDescendants()) do
-								fn51(descendant)
-								v75 += 1
-
-								if v75 % 1000 == 0 then
-									task.wait(0.05)
+								local started = os.clock()
+								local count = 0
+								for _, descendant in ipairs(root:GetDescendants()) do
+									pcall(fn51, descendant)
+									count += 1
+									slice()
 								end
+								warn(("[Optimize] %s done: %d instances, %.1fs elapsed"):format(label, count, os.clock() - started))
 							end
 
-							for _, child in ipairs(tbl17.Players:GetChildren()) do
-								if child ~= tbl17.LocalPlayer then
-									fn51(child)
-									v75 += 1
-
-									if v75 % 1000 == 0 then
-										task.wait(0.01)
-									end
+							visit(tbl17.Workspace, "Workspace")
+							for _, otherPlayer in ipairs(tbl17.Players:GetChildren()) do
+								if otherPlayer ~= tbl17.LocalPlayer then
+									pcall(fn51, otherPlayer)
 								end
+								slice()
 							end
 
-							for _, descendant in ipairs(tbl17.RS:GetDescendants()) do
-								fn51(descendant)
-								v75 += 1
 
-								if v75 % 1000 == 0 then
-									task.wait(0.01)
-								end
+							local doReplicatedPass = function()
+								visit(tbl17.RS, "ReplicatedStorage")
 							end
-
-							for _, descendant in ipairs(tbl17.LocalPlayer.PlayerGui:GetDescendants()) do
-								fn51(descendant)
-								v75 += 1
-
-								if v75 % 1000 == 0 then
-									task.wait(0.01)
-								end
-							end
+							visit(tbl17.LocalPlayer.PlayerGui, "PlayerGui")
 
 							for _, child in ipairs(tbl17.LocalPlayer.PlayerGui:GetChildren()) do
-								if child.Name ~= "SKIDER SAE KAITUN" and child.ClassName == "ScreenGui" then
-									child.Enabled = false
+								if child.Name ~= "SKIDER SAE KAITUN" and child:IsA("ScreenGui") then
+									pcall(function() child.Enabled = false end)
 								end
+								slice()
 							end
-
-							pcall(function()
-								for _, child in ipairs(tbl17.CoreGui:GetChildren()) do
-									if child.Name ~= "DevConsoleMaster" and child:IsA("ScreenGui") then
-										child.Enabled = false
-									end
-								end
-							end)
 
 							for _, child in ipairs(tbl17.CoreGui:GetChildren()) do
 								if child.Name ~= "DevConsoleMaster" then
-									child:Destroy()
+									pcall(function()
+										if child:IsA("ScreenGui") then
+											child.Enabled = false
+										end
+										child:Destroy()
+									end)
 								end
+								slice()
 							end
 
-							tbl17.Lighting.GlobalShadows = false
-							tbl17.Lighting.FogEnd = 1000000
-							tbl17.Lighting.ShadowSoftness = 0
-							tbl17.StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, false)
-							tbl17.GuiService.TouchControlsEnabled = false
-							tbl17.RunService:Set3dRenderingEnabled(false)
-							local n31 = 0
+							pcall(function()
+								tbl17.Lighting.GlobalShadows = false
+								tbl17.Lighting.FogEnd = 1000000
+								tbl17.Lighting.ShadowSoftness = 0
+								tbl17.StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, false)
+								tbl17.GuiService.TouchControlsEnabled = false
+							end)
 
-							for _, descendant in ipairs(tbl17.LocalPlayer.PlayerGui:GetDescendants()) do
-								if descendant:IsA("Frame") then
-									descendant.Visible = false
-									n31 += 1
 
-									if n31 % 100 == 0 then
-										task.wait(0.01)
-									end
-								end
-							end
+							task.wait()
+							pcall(function()
+								tbl17.RunService:Set3dRenderingEnabled(false)
+							end)
 
-							if getrendersteppedlist then
+							if type(getrendersteppedlist) == "function" then
 								pcall(function()
-									for _, v76 in ipairs(getrendersteppedlist()) do
-										tbl17.RunService:UnbindFromRenderStep(v76.Name)
+									for _, item in ipairs(getrendersteppedlist()) do
+										tbl17.RunService:UnbindFromRenderStep(item.Name)
+										slice()
 									end
 								end)
 							end
 
-							local n32 = 0
-
-							for _, v76 in
-								{
-									"Heartbeat",
-									"RenderStepped",
-									"Stepped",
-									"PreSimulation",
-									"PostSimulation",
-									"PreRender",
-								},
-								nil,
-								nil
-							do
-								for _, v77 in getconnections(tbl17.RunService[v76]) do
-									local function_ = v77.Function
-
-									if function_ then
-										local ok, result = pcall(getinfo, function_)
-										if
-											ok
-											and result
-											and string.find(
-												getinfo(function_).source,
-												"=ReplicatedFirst.UGI.ContentCatalog"
-											)
-										then
-											continue
+							if type(getconnections) == "function" then
+								for _, eventName in ipairs({
+									"Heartbeat", "RenderStepped", "Stepped",
+									"PreSimulation", "PostSimulation", "PreRender",
+								}) do
+									local event = tbl17.RunService[eventName]
+									if event then
+										local ok, connections = pcall(getconnections, event)
+										if ok and type(connections) == "table" then
+											for _, connection in ipairs(connections) do
+												local skip = false
+												local functionValue = connection.Function
+												if functionValue and type(getinfo) == "function" then
+													local infoOk, info = pcall(getinfo, functionValue)
+													skip = infoOk and type(info) == "table"
+														and type(info.source) == "string"
+														and string.find(info.source, "=ReplicatedFirst.UGI.ContentCatalog", 1, true) ~= nil
+												end
+												if not skip then
+													pcall(function() connection:Disconnect() end)
+												end
+												slice()
+											end
 										end
-									end
-
-									v77:Disconnect()
-									n32 += 1
-
-									if n32 % 200 == 0 then
-										task.wait()
 									end
 								end
 							end
 
-							warn("[Optimize] optimization1 complete")
+							warn("[Optimize] optimization1 complete (startup); ReplicatedStorage queued")
+
+							task.defer(function()
+								local ok, err = pcall(doReplicatedPass)
+								if not ok then
+									warn("[Optimize] ReplicatedStorage background pass error:", err)
+								end
+							end)
 						end
 
 						fn34 = function()
@@ -1510,11 +1486,12 @@ return (function()
 								return true
 							end
 
-							fn36 = function()
+							fn36 = function(maxUpgrades)
 								local n31 = 0
 								local v75
 
 								while true do
+									if maxUpgrades and n31 >= maxUpgrades then return n31, "Batch complete" end
 									local v76 = tbl18.Save.Peek()
 									assert(v76, "Expected local save data")
 
@@ -1598,11 +1575,12 @@ return (function()
 							return true, "Upgraded to: " .. v76.Name
 						end
 
-						fn37 = function()
+						fn37 = function(maxUpgrades)
 							local n31 = 0
 							local v75
 
 							while true do
+								if maxUpgrades and n31 >= maxUpgrades then return n31, "Batch complete" end
 								local v76 = tbl18.Save.Peek()
 								assert(v76, "Expected local save data")
 
@@ -2100,6 +2078,11 @@ return (function()
 			do
 				do
 					fn55 = function(arg)
+						local planner = tbl21.FarmPlanner
+						if planner then
+							if planner.Ignore(arg) or not planner.Qualifies(arg) or not planner.Accessible(arg) then return false end
+							if planner.Automatic() then return true end
+						end
 						for _, stealEgg in ipairs(stealAnEgg.StealEggs) do
 							if fn44(arg, stealEgg.Name) then
 								local minKG = stealEgg.MinKG or 0
@@ -2124,6 +2107,8 @@ return (function()
 
 						return false
 					end
+
+					tbl21.MatchesStealEgg = fn55
 
 					fn56 = function(...)
 						if tbl20.Debug.Steal then
@@ -2285,7 +2270,7 @@ return (function()
 
 					do
 						fn45 = function()
-							if #stealAnEgg.StealEggs == 0 then
+							if #stealAnEgg.StealEggs == 0 and not (tbl21.FarmPlanner and tbl21.FarmPlanner.Automatic()) then
 								return false
 							end
 							local v75 = fn41()
@@ -2300,10 +2285,10 @@ return (function()
 							return false
 						end
 
-						fn46 = function()
+						fn46 = function(eggs)
 							local n31 = 0
 
-							for _, v75 in ipairs(fn41()) do
+							for _, v75 in ipairs(eggs or fn41()) do
 								if fn55(v75) and v75.Position then
 									n31 += 1
 								end
@@ -2653,6 +2638,7 @@ return (function()
 						end
 						local v97, v98 = fn59(grantedUid)
 						fn56("equip result", v97, v98)
+						if tbl21.FarmPlanner then tbl21.FarmPlanner.RegisterEgg(grantedUid) end
 						return true, arg.Name
 					end
 
@@ -2662,8 +2648,8 @@ return (function()
 					end
 				end
 
-				fn51 = function()
-					if #stealAnEgg.StealEggs == 0 then
+				fn51 = function(maxEggs, targetUid)
+					if #stealAnEgg.StealEggs == 0 and not (tbl21.FarmPlanner and tbl21.FarmPlanner.Automatic()) then
 						return 0, "No StealEggs configured"
 					end
 					fn30("Steal Mode")
@@ -2683,12 +2669,11 @@ return (function()
 						else
 							local v79 = nil
 
-							for _, v80 in ipairs(fn41()) do
-								if v80.Uid and not processed[v80.Uid] and fn55(v80) and v80.Position then
-									v79 = v80
-									break
-								else
-									v79 = nil
+							if tbl21.FarmPlanner then
+								v79 = tbl21.FarmPlanner.Choose(fn41(), processed, targetUid)
+							else
+								for _, egg in ipairs(fn41()) do
+									if egg.Uid and not processed[egg.Uid] and fn55(egg) and egg.Position then v79 = egg break end
 								end
 							end
 
@@ -2712,6 +2697,7 @@ return (function()
 							end
 							processed[v79.Uid] = true
 							v75 += 1
+							if maxEggs and v75 >= maxEggs then return v75, ("Stolen %d eggs"):format(v75) end
 							task.wait(0.3)
 						end
 					end
@@ -3310,6 +3296,7 @@ return (function()
 							local v78 = cFrame:PointToObjectSpace((cFrame2 * CFrame.new(i, 0, i2)).Position)
 							local vector = Vector3.new(v78.X, y, v78.Z)
 							table.insert(tbl22, CFrame.new(vector) * cframe)
+								if #tbl22 % 64 == 0 then task.wait() end
 						end
 					end
 
@@ -3437,6 +3424,9 @@ return (function()
 					if not v75.EggInventory then
 						return 0, "No egg inventory"
 					end
+					if #stealAnEgg.PlaceEggs == 0 and not (tbl21.FarmPlanner and tbl21.FarmPlanner.PendingCount() > 0) then
+						return 0, "No new eggs to place"
+					end
 					local v76, v77 = fn61()
 
 					if not (not v76 or #v76 == 0) then
@@ -3451,13 +3441,13 @@ return (function()
 							end
 						end
 
-						if #stealAnEgg.PlaceEggs == 0 then
-							return 0, "No eggs configured in PlaceEggs"
-						end
 						local tbl23 = {}
 
 						for k, v79 in pairs(v75.EggInventory) do
 							if not tbl22[k] then
+								if #stealAnEgg.PlaceEggs == 0 and tbl21.FarmPlanner and tbl21.FarmPlanner.AutoPlace(k) then
+									table.insert(tbl23, k)
+								end
 								for _, placeEgg in ipairs(stealAnEgg.PlaceEggs) do
 									if fn54(v79, placeEgg) then
 										table.insert(tbl23, k)
@@ -3758,28 +3748,40 @@ return (function()
 		end
 
 		do
+			local moduleCache = {}
+			local moduleMissAt = {}
+
 			local function fn61(arg)
-				local rs = tbl17.RS
+				local cached = moduleCache[arg]
+				if cached ~= nil then
+					return cached
+				end
+
+				local missAt = moduleMissAt[arg]
+				if missAt and os.clock() - missAt < 10 then
+					return nil
+				end
+
 				local localPlayer = tbl17.LocalPlayer
-				local findFirstChild = localPlayer.FindFirstChild
+				local roots = { tbl17.RS }
+				local playerScripts = localPlayer:FindFirstChild("PlayerScripts")
+				local playerGui = localPlayer:FindFirstChild("PlayerGui")
+				if playerScripts then table.insert(roots, 1, playerScripts) end
+				if playerGui then table.insert(roots, playerGui) end
 
-				for _, v75 in ipairs({
-					tbl17.LocalPlayer:FindFirstChild("PlayerScripts"),
-					rs,
-					findFirstChild(localPlayer, "PlayerGui"),
-				}) do
-					if v75 then
-						local v76 = v75:FindFirstChild(arg, true)
-
-						if v76 and v76:IsA("ModuleScript") then
-							local ok, result = pcall(require, v76)
-							if ok then
-								return result
-							end
+				for _, root in ipairs(roots) do
+					local module = root:FindFirstChild(arg, true)
+					if module and module:IsA("ModuleScript") then
+						local ok, result = pcall(require, module)
+						if ok and result ~= nil then
+							moduleCache[arg] = result
+							moduleMissAt[arg] = nil
+							return result
 						end
 					end
 				end
 
+				moduleMissAt[arg] = os.clock()
 				return nil
 			end
 
@@ -3949,12 +3951,22 @@ return (function()
 				end
 			end
 
-			local function fn67(arg)
-				local ok, result = pcall(function()
-					return tbl19.AskWearStill:InvokeServer(arg)
+			local function fn67()
+				local ok, result, reason = pcall(function()
+					return tbl19.AskWearStill:InvokeServer()
 				end)
-
-				return ok and result == true, result
+				if not ok then return false, tostring(result) end
+				if reason == "Already using treadmill" then
+					local collection = game:GetService("CollectionService")
+					for index, model in ipairs(collection:GetTagged("ActiveTreadmill")) do
+						if index > 32 then break end
+						local id = model:GetAttribute("ActiveTreadmillId")
+						if type(id) == "string" and id ~= "" then tbl21.treadmillActiveName = id break end
+					end
+					tbl21.treadmillActiveName = tbl21.treadmillActiveName or fn62()
+					return true, reason
+				end
+				return result == true, reason or result
 			end
 
 			local function fn68()
@@ -3965,12 +3977,24 @@ return (function()
 				fn64()
 			end
 
-			fn63 = function()
+			tbl21.LeaveTraining = fn68
+
+			local function pauseFarm(reason)
+				tbl21.TrainStarted = nil
+				tbl21.FarmPausedReason = tostring(reason)
+				fn64()
+				fn30("Paused")
+				fn29(tbl21.FarmPausedReason)
+				return false, tbl21.FarmPausedReason
+			end
+
+			fn63 = function(duration, shouldStop, keepTraining)
+				if tbl21.FarmPausedReason then return false, tbl21.FarmPausedReason end
 				if not tbl20.AutoTreadmill then
 					return false, "C.AutoTreadmill disabled"
 				end
 				fn30("Farm Mode")
-				fn29("Farming treadmill until cycle...")
+				fn29("Training speed in a short session...")
 				fn59()
 				fn66()
 				local v75 = fn62()
@@ -3983,9 +4007,18 @@ return (function()
 				local n31 = serverTimeNow + (typeof(v76) == v78 and math.max(v76, 1) or 60) + 3
 				local v79 = "cycle"
 				fn58("farm until cycle", "tm", v75, "speed", fn61(), v79, v76, "via", v77)
+				if tbl21.ApproachTreadmill then
+					local reached, reason = tbl21.ApproachTreadmill()
+					if not reached then fn64() return false, reason or "Treadmill route: unavailable" end
+				end
 				fn65()
-				local v80, v81 = fn67(v75)
+				local v80, v81 = true, nil
+				if tbl21.treadmillActiveName == nil then v80, v81 = fn67() end
 				fn58("EQUIP_STATIC", v80, v81)
+				if not v80 then
+					if v81 == "Movement is not currently trusted" then fn64() return false, "Treadmill route: waiting for server movement recovery" end
+					return pauseFarm(v81 or "Treadmill activation rejected")
+				end
 				fn60()
 				local n32 = os.clock() + 8
 
@@ -3994,12 +4027,15 @@ return (function()
 				end
 
 				if tbl21.treadmillActiveName == nil then
-					fn68()
-					return false, "Failed to activate treadmill"
+					return pauseFarm("Treadmill activation was not confirmed")
 				end
 				local flag14
+				local trainStarted = os.clock()
+				tbl21.TrainStarted = trainStarted
+				local trainDeadline = trainStarted + math.clamp(tonumber(duration) or 20, 5, 60)
 
 				while true do
+					if os.clock() >= trainDeadline or shouldStop and shouldStop() then break end
 					local workspace_ = tbl17.Workspace
 					flag14 = false
 
@@ -4028,7 +4064,11 @@ return (function()
 
 							if tbl21.treadmillActiveName == nil then
 								fn65()
-								fn67(v75)
+								local accepted, reason = fn67()
+								if not accepted then
+									if reason == "Movement is not currently trusted" then fn64() return false, "Treadmill route: waiting for server movement recovery" end
+									return pauseFarm(reason or "Treadmill reactivation rejected")
+								end
 								fn60()
 							else
 								fn60()
@@ -4054,9 +4094,10 @@ return (function()
 					end
 				end
 
-				fn68()
+				tbl21.TrainStarted = nil
+				if not (keepTraining and keepTraining()) then fn68() else fn29("Training speed while waiting for an eligible egg") end
 				fn58("cycle wait done, speed", fn61(), "rolled", flag14)
-				return true, flag14 and "Cycle rolled" or "Deadline", flag14
+				return true, flag14 and "Cycle rolled" or "Deadline", flag14, os.clock() - trainStarted
 			end
 		end
 	end
@@ -4087,6 +4128,7 @@ return (function()
 		end
 
 		fn65 = function()
+			if tbl21.FarmPausedReason then return end
 			fn30("Maintenance")
 			local function runStep(taskName, tag, callback, upgrade)
 				fn29(taskName)
@@ -4098,13 +4140,17 @@ return (function()
 				else
 					warn(tag, result, reason)
 				end
+				task.wait(0.1)
 			end
 			runStep("Equip best trail", "[Trail]", fn35)
-			runStep("Upgrade base", "[BaseUpgrade]", fn36, true)
-			runStep("Upgrade treadmill", "[Treadmill]", fn37, true)
+			runStep("Upgrade treadmill", "[Treadmill]", function() return fn37(1) end, true)
+			task.wait()
+			if not tbl21.CanUpgradeTreadmill or not tbl21.CanUpgradeTreadmill() then
+				runStep("Upgrade base", "[BaseUpgrade]", function() return fn36(1) end, true)
+			end
 			runStep("Sell pets", "[Sell]", fn39)
-			runStep("Place eggs", "[PlaceEggs]", fn55)
 			runStep("Hatch eggs", "[HatchEggs]", fn53)
+			runStep("Place eggs", "[PlaceEggs]", fn55)
 			runStep("Claim index rewards", "[Index]", fn56)
 			runStep("Claim offline money", "[Offline]", fn57)
 			fn29("Idle")
@@ -4112,11 +4158,12 @@ return (function()
 
 		do
 			local function fn66()
+				local zoneStamp, zoneCount, zoneMatch = -math.huge, 0, 0
 				task.spawn(function()
 					while task.wait(1) do
 						if tbl21.ui.UI then
 							local startingTime = tbl21.ui.StartingTime
-							fn28(tbl21.ui.UI.SessionTime, "Session Time: " .. fn32(os.time() - startingTime))
+							fn28(tbl21.ui.UI.SessionTime, (tbl21.ui.UI.Compact and "" or "Session Time: ") .. fn32(os.time() - startingTime))
 							local treadmillUpgradeLevel = tbl18.Save.Peek()
 							local money = treadmillUpgradeLevel and treadmillUpgradeLevel.Money or 0
 							local baseUpgradeLevel = treadmillUpgradeLevel and treadmillUpgradeLevel.BaseUpgradeLevel
@@ -4128,8 +4175,14 @@ return (function()
 							local str7 = fn62() or "-"
 							local v76, v77 = fn42()
 							local flag14, v78 = fn43()
-							local n31 = #fn41()
-							local v79 = fn46()
+							if os.clock() - zoneStamp >= 4 then
+								zoneStamp = os.clock()
+								local eggs = fn41()
+								zoneCount = #eggs
+								zoneMatch = fn46(eggs)
+							end
+							local n31 = zoneCount
+							local v79 = zoneMatch
 							local n32 = #stealAnEgg.StealEggs
 							local str8 = "?"
 
@@ -4176,6 +4229,28 @@ Steal match:  %d (%d rules)]],
 								n32
 							)
 
+							if tbl21.Halloween and tbl21.Halloween.State.OwnsStep then
+								str10 = tbl21.Halloween.Info(fn31)
+							end
+							if tbl21.ui.UI.Compact then
+								local stats = tbl21.ui.UI.Stats
+								fn28(stats.Cash, "$" .. fn31(money))
+								fn28(stats.Speed, fn31(v75))
+								fn28(stats.Treadmill, ("%d / %d"):format(treadmillUpgradeLevel, stealAnEgg.MaxTreadmillLevel))
+								fn28(stats.Plot, ("%d / %d"):format(baseUpgradeLevel, stealAnEgg.MaxPlotLevel))
+								fn28(stats.Cycle, str8)
+								fn28(stats.Targets, ("%d / %d"):format(v79, n31))
+								if tbl21.Halloween and tbl21.Halloween.State.OwnsStep then
+									str10 = str10:gsub("\n", "  |  ")
+								else
+									local farm = environment.Config and environment.Config.Farm or {}
+									local state = tbl21.FarmPlanner and tbl21.FarmPlanner.State
+									local credit = state and state.TrainCredit or 0
+									if tbl21.TrainStarted then credit += math.max(0, os.clock() - tbl21.TrainStarted) end
+									str10 = ("Train %ds / %ds  |  Egg >= %s / s  |  Goal %s"):format(math.floor(credit), tonumber(farm["Min Train Seconds"]) or 0,
+										tostring(farm["Min Egg Income"] or 0), state and state.SpeedGoal and fn31(state.SpeedGoal) or "--")
+								end
+							end
 							fn28(tbl21.ui.UI.Info, str10)
 							fn28(tbl21.ui.UI.CurrentZone, tbl21.ui.Mode)
 							fn28(tbl21.ui.UI.LastTask, "Task: " .. tbl21.ui.CurrentTask)
@@ -4190,6 +4265,2201 @@ Steal match:  %d (%d rules)]],
 			fn29("Starting loop...")
 			fn66()
 		end
+	end
+	do
+		local createFarmPlanner = function(context)
+			local now = context.Clock or os.clock
+			local state: { [string]: any } = {
+				Active = true,
+				ManagedEggs = context.ManagedEggs or {},
+				StealsSinceTrain = 0,
+				TrainCredit = 0,
+				FailedTargets = {},
+				NextMaintenance = 0,
+				NextUpgrade = 0,
+				NextPlace = 0,
+				SpeedGoal = nil,
+				Action = "Starting balanced farm",
+			}
+			local planner = { State = state, Game = context.Game or game }
+			local function config()
+				local value = context.GetConfig()
+				return type(value) == "table" and value or {}
+			end
+			local function halt(reason)
+				state.HaltedReason = tostring(reason)
+				state.Action = "Paused: " .. state.HaltedReason
+				if context.Status then
+					context.Status("Paused", state.Action)
+				end
+				return true
+			end
+			local function budget(name, fallback, minimum, maximum)
+				local value = tonumber(config()[name]) or fallback
+				if value ~= value or value == math.huge or value == -math.huge then
+					value = fallback
+				end
+				return math.clamp(value, minimum, maximum)
+			end
+			function planner.Automatic()
+				return #context.GetStealRules() == 0 and config()["Auto Steal Eggs"] ~= false
+			end
+			local function minimumIncome()
+				local value = config()["Min Egg Income"]
+				if value == nil then
+					return 0
+				end
+				local numeric = tonumber(value)
+				if not numeric and type(value) == "string" then
+					local amount, suffix = string.upper(value):match("^%s*([%d%.]+)%s*([KMBT])%s*$")
+					local scale = ({ K = 1e3, M = 1e6, B = 1e9, T = 1e12 })[suffix]
+					numeric = amount and scale and tonumber(amount) and tonumber(amount) * scale or nil
+				end
+				if not numeric or numeric ~= numeric or numeric < 0 or numeric == math.huge then
+					return nil
+				end
+				return numeric
+			end
+			function planner.Qualifies(egg)
+				local minimum = minimumIncome()
+				if not minimum then
+					return false
+				end
+				if minimum == 0 then
+					return true
+				end
+				local income = context.EggIncome and context.EggIncome(egg)
+				return type(income) == "number" and income == income and income < math.huge and income >= minimum
+			end
+			function planner.Accessible(egg)
+				if not egg.Position or not egg.Uid then
+					return false
+				end
+				local required = context.RequiredSpeed(egg)
+				if type(required) ~= "number" or required ~= required or required < 0 then
+					return not planner.Automatic()
+				end
+				local speed = context.GetSave().SpeedPower or 0
+				local margin = budget("Speed Margin", 1.05, 1, 2)
+				if speed < required * margin then
+					local goal = required * margin
+					if not state.SpeedGoal or goal < state.SpeedGoal then
+						state.SpeedGoal = goal
+					end
+					return false
+				end
+				return true
+			end
+			function planner.Ignore(egg)
+				if egg.Rarity ~= "Secret" then
+					return false
+				end
+				local ignore = config()["Ignore Secret"]
+				if type(ignore) ~= "table" then
+					return false
+				end
+				for key, value in pairs(ignore) do
+					local name = type(key) == "string" and value == true and key or value
+					if name == egg.Name or name == egg.AssetCategory or name == egg.AreaId then
+						return true
+					end
+				end
+				return false
+			end
+			function planner.Choose(eggs, processed, targetUid)
+				local best, bestScore
+				for index, egg in ipairs(eggs) do
+					if index % 16 == 0 and context.Yield then
+						context.Yield()
+					end
+					if
+						egg.Uid
+						and not (state.FailedTargets[egg.Uid] and state.FailedTargets[egg.Uid] > now())
+						and not (processed and processed[egg.Uid])
+						and (not targetUid or egg.Uid == targetUid)
+						and planner.Qualifies(egg)
+						and context.Matches(egg)
+					then
+						local score = context.Score(egg)
+						if type(score) == "number" and score == score and (not bestScore or score > bestScore) then
+							best, bestScore = egg, score
+						end
+					end
+				end
+				return best
+			end
+			function planner.RegisterEgg(uid)
+				if type(uid) == "string" then
+					state.ManagedEggs[uid] = true
+				end
+			end
+			function planner.PendingCount()
+				local inventory = context.GetSave().EggInventory or {}
+				local placed = context.GetPlaced()
+				local count = 0
+				for uid in pairs(state.ManagedEggs) do
+					if inventory[uid] == nil then
+						state.ManagedEggs[uid] = nil
+					elseif not (placed[uid] and placed[uid].Placement) then
+						count += 1
+					end
+				end
+				return count
+			end
+			function planner.AutoPlace(uid)
+				return config()["Auto Place Eggs"] ~= false and state.ManagedEggs[uid] == true
+			end
+			local function maintain()
+				state.Action = "Upgrade, place eggs and hatch ready eggs"
+				if
+					context.LeaveTraining
+					and (
+						context.CanUpgradeTreadmill()
+						or planner.PendingCount() > 0
+						or context.HasReadyEggs and context.HasReadyEggs()
+					)
+				then
+					context.LeaveTraining()
+				end
+				context.Maintain()
+				state.NextMaintenance = now() + 15
+			end
+			local function train()
+				local seconds = budget("Train Seconds", 20, 5, 60)
+				local started = now()
+				local minimumTrain = budget("Min Train Seconds", 0, 0, 600)
+				local nextCheck = started + 5
+				local function shouldStop()
+					if not state.Active or state.HaltedReason then
+						return true
+					end
+					if now() < nextCheck then
+						return false
+					end
+					nextCheck = now() + 2
+					if context.CanUpgradeTreadmill() then
+						return true
+					end
+					if state.TrainCredit + now() - started < minimumTrain then
+						return false
+					end
+					if now() < (state.NextStealAttempt or 0) then
+						return false
+					end
+					if now() - started >= 8 and context.CycleReady() and planner.Choose(context.GetEggs()) then
+						return true
+					end
+					return false
+				end
+				local function keepTraining()
+					if not state.Active or state.HaltedReason or context.CanUpgradeTreadmill() then
+						return false
+					end
+					if planner.PendingCount() > 0 or context.HasReadyEggs and context.HasReadyEggs() then
+						return false
+					end
+					if now() < (state.NextStealAttempt or 0) then
+						return true
+					end
+					if state.TrainCredit + now() - started < minimumTrain then
+						return true
+					end
+					return not (context.CycleReady() and planner.Choose(context.GetEggs()))
+				end
+				state.Action = ("Training for up to %.0fs, then checking eggs and upgrades"):format(seconds)
+				local ok, reason, trained = context.Train(seconds, shouldStop, keepTraining)
+				if ok ~= false then
+					state.TrainCredit += math.max(0, type(trained) == "number" and trained or now() - started)
+				end
+				if context.Failure and context.Failure() then
+					return halt(context.Failure())
+				end
+				if ok == false then
+					if type(reason) == "string" and reason:find("Treadmill route:", 1, true) == 1 then
+						state.NextTrainAttempt = now() + (reason == "Treadmill route: Route progress" and 0 or 5)
+						state.Action = reason
+						if context.Status then
+							context.Status("Farm Mode", "Replanning the route to the treadmill")
+						end
+						return true
+					end
+					return halt(reason or "Treadmill training failed")
+				end
+				state.StealsSinceTrain = 0
+				state.NextUpgrade = 0
+				return true
+			end
+			local function step()
+				if not state.Active then
+					return false
+				end
+				if not minimumIncome() then
+					return halt("Invalid Min Egg Income config")
+				end
+				for uid, expires in pairs(state.FailedTargets) do
+					if expires <= now() then
+						state.FailedTargets[uid] = nil
+					end
+				end
+				if state.HaltedReason then
+					return halt(state.HaltedReason)
+				end
+				if context.Failure and context.Failure() then
+					return halt(context.Failure())
+				end
+				if now() < (state.NextTrainAttempt or 0) then
+					return true
+				end
+				if now() >= state.NextMaintenance then
+					maintain()
+					return true
+				end
+				if now() >= state.NextUpgrade and context.CanUpgradeTreadmill() then
+					state.Action = "Upgrading the treadmill before the next train session"
+					if context.LeaveTraining then
+						context.LeaveTraining()
+					end
+					local count, reason = context.UpgradeTreadmill()
+					if count == 0 then
+						return halt(reason or "Treadmill upgrade was not confirmed")
+					end
+					state.NextUpgrade = now() + 5
+					return true
+				end
+				local pending = planner.PendingCount()
+				if pending > 0 and now() >= state.NextPlace then
+					state.Action = "Placing stolen eggs and hatching ready eggs"
+					if context.LeaveTraining then
+						context.LeaveTraining()
+					end
+					context.PlaceAndHatch()
+					state.NextPlace = now() + 10
+					return true
+				end
+				local batch = math.floor(budget("Steal Batch Size", 2, 1, 5))
+				if
+					pending < 2
+					and state.StealsSinceTrain < batch
+					and state.TrainCredit >= budget("Min Train Seconds", 0, 0, 600)
+					and now() >= (state.NextStealAttempt or 0)
+					and not context.CanUpgradeTreadmill()
+					and context.CycleReady()
+				then
+					state.SpeedGoal = nil
+					local target = planner.Choose(context.GetEggs())
+					if target then
+						state.Action = "Stealing " .. tostring(target.Name or target.AssetCategory)
+						if context.LeaveTraining then
+							context.LeaveTraining()
+						end
+						local stolen, reason = context.Steal(1, target.Uid)
+						if stolen == 0 and reason == "Stolen 0 eggs" then
+							return train()
+						end
+						if
+							stolen == 0
+							and (
+								reason == "Carried egg was not confirmed in inventory"
+								or reason == "Movement is not currently trusted"
+							)
+						then
+							state.FailedTargets[target.Uid] = now() + 45
+							if reason == "Movement is not currently trusted" then
+								state.NextStealAttempt = now() + 60
+							end
+							state.LastFailure = reason
+							state.TrainCredit = 0
+							state.Action = "Egg delivery not confirmed; training before the next target"
+							if context.Status then
+								context.Status("Farm Mode", state.Action)
+							end
+							return train()
+						end
+						if type(stolen) ~= "number" or stolen < 1 then
+							return halt(reason or "The egg was not acquired")
+						end
+						state.StealsSinceTrain += stolen
+						state.TrainCredit = 0
+						context.PlaceAndHatch()
+						state.NextPlace = now() + 10
+						state.NextMaintenance = math.min(state.NextMaintenance, now() + 5)
+						return true
+					end
+				end
+				return train()
+			end
+			function planner.Step()
+				local ok, result = pcall(step)
+				if not ok then
+					return halt(result)
+				end
+				return result
+			end
+			function planner.Stop()
+				state.Active = false
+			end
+			return planner
+		end
+		local previous = environment.__SkiderSaeFarm
+		local managed = {}
+		if type(previous) == "table" and previous.Game == game then
+			if previous.State then managed = previous.State.ManagedEggs or {} end
+			if type(previous.Stop) == "function" then previous.Stop() end
+		end
+		local requiredCache = {}
+		local function requiredSpeed(egg)
+			local mainWorld = tbl17.Workspace:FindFirstChild("World")
+			local areas = mainWorld and mainWorld:FindFirstChild("Areas")
+			local guards = areas and areas:FindFirstChild("GuardAreas")
+			local area = guards and guards:FindFirstChild(tostring(egg.AreaId))
+			if not area then return nil end
+			local published = area:GetAttribute("GuardEscapeSpeeds")
+			if typeof(published) == "Vector2" then return published.X end
+			local cached = requiredCache[area]
+			if cached and os.clock() < cached.Expires then return cached.Value end
+			if not tbl21.GuardEscapeRequirement then
+				task.wait()
+				tbl21.GuardEscapeRequirement = require(tbl17.RS.Shared.Modules.GuardAreas.GuardEscapeRequirement)
+			end
+			local guard = area:FindFirstChild("Guard")
+			local root = guard and guard:FindFirstChild("HumanoidRootPart")
+			local line = areas:FindFirstChild("SeparationLine")
+			if not root or not line then return nil end
+			local ok, value = pcall(tbl21.GuardEscapeRequirement.ResolveSpeedPower, area, root.Position, line)
+			if not ok or type(value) ~= "number" then return nil end
+			requiredCache[area] = {Value = value, Expires = os.clock() + 5}
+			return value
+		end
+		local function canUpgrade()
+			local save = tbl18.Save.Peek()
+			if not save then return false end
+			local level = save.TreadmillUpgradeLevel or 0
+			local nextTier = tbl21.sortedTreadmills[level + 1]
+			return level < stealAnEgg.MaxTreadmillLevel and nextTier ~= nil and (save.Money or 0) >= nextTier.Price
+		end
+		tbl21.CanUpgradeTreadmill = canUpgrade
+		local createNavigator = function(context)
+			local player = context.Player
+			local now = context.Clock or os.clock
+			local waitFor = context.Wait or task.wait
+			local navigator = { Stopped = false }
+			local current
+			local function flat(a, b)
+				return Vector3.new(a.X - b.X, 0, a.Z - b.Z).Magnitude
+			end
+			function navigator.Cancel()
+				if current then
+					current.Cancel()
+				end
+			end
+			function navigator.Stop()
+				navigator.Stopped = true
+				navigator.Cancel()
+			end
+			function navigator.Go(destination, radius, predicate, seconds)
+				navigator.Cancel()
+				if navigator.Stopped then
+					return false, "Cancelled"
+				end
+				local character = player.Character
+				local root = character and character:FindFirstChild("HumanoidRootPart")
+				local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+				if not root or not humanoid or humanoid.Health <= 0 then
+					return false, "Character unavailable"
+				end
+				local function arrived()
+					return predicate and predicate() or (root.Position - destination).Magnitude <= (radius or 5)
+				end
+				if arrived() then
+					return true
+				end
+				local pathfinding = context.Pathfinding or game:GetService("PathfindingService")
+				local path =
+					pathfinding:CreatePath({ AgentRadius = 2, AgentHeight = 5, AgentCanJump = true, WaypointSpacing = 8 })
+				local computed = pcall(path.ComputeAsync, path, root.Position, destination)
+				local points = computed and path.Status == Enum.PathStatus.Success and path:GetWaypoints() or nil
+				if path.Destroy then
+					path:Destroy()
+				end
+				if not points or #points == 0 then
+					return false, "No walkable path"
+				end
+				local partial = #points > 256
+				if partial then
+					points = table.move(points, 1, 256, 1, {})
+				end
+				if not partial and flat(points[#points].Position, destination) > math.max(radius or 5, 12) then
+					return false, "Destination is not reachable"
+				end
+				local compact = {}
+				for index, point in ipairs(points) do
+					local previous, following = compact[#compact], points[index + 1]
+					local redundant = false
+					if
+						previous
+						and following
+						and point.Action ~= Enum.PathWaypointAction.Jump
+						and following.Action ~= Enum.PathWaypointAction.Jump
+					then
+						local a, b = point.Position - previous.Position, following.Position - point.Position
+						redundant = a.Magnitude > 0.1 and b.Magnitude > 0.1 and a.Unit:Dot(b.Unit) > 0.995
+					end
+					if not redundant then
+						table.insert(compact, point)
+					end
+				end
+				local reached = false
+				local connection = humanoid.MoveToFinished
+					and humanoid.MoveToFinished:Connect(function(value)
+						reached = value == true
+					end)
+				local lease: { [string]: any } = { Cancelled = false }
+				current = lease
+				function lease.Cancel()
+					if lease.Cancelled then
+						return
+					end
+					lease.Cancelled = true
+					if connection then
+						connection:Disconnect()
+						connection = nil
+					end
+					if current ~= lease then
+						return
+					end
+					current = nil
+					if
+						lease.LastPoint
+						and player.Character == character
+						and root.Parent
+						and humanoid.Parent
+						and typeof(humanoid.WalkToPoint) == "Vector3"
+						and (humanoid.WalkToPoint - lease.LastPoint).Magnitude < 0.05
+					then
+						humanoid:MoveTo(root.Position)
+						humanoid:Move(Vector3.zero, false)
+					end
+				end
+				local deadline = now() + (seconds or 35)
+				local tolerance = math.clamp((humanoid.WalkSpeed or 16) * 0.08, 3, 8)
+				local function walk()
+					for _, point in ipairs(compact) do
+						if navigator.Stopped or lease.Cancelled or context.IsActive and not context.IsActive() then
+							return false, "Cancelled"
+						end
+						if player.Character ~= character or humanoid.Health <= 0 then
+							return false, "Character changed"
+						end
+						if arrived() then
+							return true
+						end
+						if point.Action == Enum.PathWaypointAction.Jump then
+							humanoid.Jump = true
+						end
+						reached = false
+						lease.LastPoint = point.Position
+						humanoid:MoveTo(point.Position)
+						local pointDeadline = math.min(
+							deadline,
+							now()
+								+ math.max(
+									5,
+									flat(root.Position, point.Position) / math.max(humanoid.WalkSpeed or 16, 1) * 2 + 2
+								)
+						)
+						while
+							flat(root.Position, point.Position) > 3
+							and not (reached and flat(root.Position, point.Position) <= tolerance)
+						do
+							if arrived() then
+								return true
+							end
+							if navigator.Stopped or lease.Cancelled or context.IsActive and not context.IsActive() then
+								return false, "Cancelled"
+							end
+							if player.Character ~= character or humanoid.Health <= 0 then
+								return false, "Character changed"
+							end
+							if now() >= pointDeadline then
+								return false, "Route timed out"
+							end
+							waitFor(0.05)
+						end
+						waitFor()
+					end
+					return arrived(), partial and "Route progress" or "Destination not reached"
+				end
+				local ok, result, reason = pcall(walk)
+				lease.Cancel()
+				if not ok then
+					return false, tostring(result)
+				end
+				return result, reason
+			end
+			return navigator
+		end
+		tbl21.ApproachTreadmill = function()
+			if tbl21.treadmillActiveName ~= nil then return true end
+			if not tbl21.NativePlotState then task.wait() tbl21.NativePlotState = require(tbl17.RS.Client.PlotState) end
+			local slot = tbl21.NativePlotState.ResolveLocalSlot()
+			local plots = tbl17.Workspace:FindFirstChild("Plots")
+			local plot = slot and plots and plots:FindFirstChild(tostring(slot))
+			local bottom = plot and plot:FindFirstChild("TreadmillBottom")
+			if not bottom or not bottom:IsA("BasePart") then return false, "Treadmill route: waiting for the own pad" end
+			local character = tbl17.LocalPlayer.Character
+			local root = character and character:FindFirstChild("HumanoidRootPart")
+			if not root then return false, "Treadmill route: waiting for character" end
+			local ray = RaycastParams.new()
+			ray.FilterType = Enum.RaycastFilterType.Include
+			ray.FilterDescendantsInstances = {bottom}
+			local function reached()
+				return tbl21.treadmillActiveName ~= nil or tbl17.Workspace:Raycast(root.Position, Vector3.new(0,-8,0),ray) ~= nil
+			end
+			if reached() then return true end
+			fn30("Farm Mode")
+			fn29("Walking to the own treadmill pad")
+			local navigator = createNavigator({Player=tbl17.LocalPlayer,IsActive=function() return not tbl21.FarmPlanner or tbl21.FarmPlanner.State.Active end})
+			tbl21.TreadmillNavigation = navigator
+			local target = bottom.CFrame:PointToWorldSpace(Vector3.new(0,bottom.Size.Y/2+3,0))
+			local arrived, reason = navigator.Go(target, 5, reached, 35)
+			tbl21.TreadmillNavigation = nil
+			if not arrived then return false, "Treadmill route: " .. tostring(reason) end
+			task.wait(0.3)
+			return true
+		end
+		tbl21.FarmPlanner = createFarmPlanner({
+			Game = game,
+			ManagedEggs = managed,
+			GetConfig = function()
+				local current = environment.Config
+				return type(current) == "table" and current.Farm or {}
+			end,
+			GetSave = function() return tbl18.Save.Peek() or {} end,
+			GetStealRules = function() return stealAnEgg.StealEggs end,
+			GetPlaced = function() return tbl18.EggCmds.GetOwnerRuntimeRecords(tbl17.LocalPlayer.UserId) or {} end,
+			GetEggs = fn41,
+			Matches = tbl21.MatchesStealEgg,
+			RequiredSpeed = requiredSpeed,
+			EggIncome = function(egg)
+				local asset = fn27(tbl18.AssetsDir)[egg.AssetCategory]
+				return asset and tonumber(asset.EarningRate) or nil
+			end,
+			Score = function(egg)
+				local asset = fn27(tbl18.AssetsDir)[egg.AssetCategory]
+				local rate = asset and tonumber(asset.EarningRate) or 1
+				local rank = asset and asset.Rarity and tonumber(asset.Rarity.Rank) or 0
+				local root = fn47()
+				local distance = root and (egg.Position - root.Position).Magnitude or 100
+				return math.log(1 + math.max(rate, 0) * math.max(tonumber(egg.AssetScale) or 1, 0.01)) * 10 + rank - math.log(1 + distance) * 2
+			end,
+			CanUpgradeTreadmill = canUpgrade,
+			UpgradeTreadmill = function() return fn37(1) end,
+			CycleReady = fn43,
+			Maintain = fn65,
+			PlaceAndHatch = function()
+				fn53()
+				task.wait()
+				fn55()
+				task.wait()
+				fn53()
+			end,
+			LeaveTraining = function() if tbl21.treadmillActiveName ~= nil then tbl21.LeaveTraining() end end,
+			HasReadyEggs = function()
+				if type(tbl18.EggState.IsReadyToHatch) ~= "function" then return false end
+				local count = 0
+				for uid, record in pairs(tbl18.EggCmds.GetOwnerRuntimeRecords(tbl17.LocalPlayer.UserId) or {}) do
+					count += 1
+					if count % 16 == 0 then task.wait() end
+					if record.Placement then
+						local ok, ready = pcall(tbl18.EggState.IsReadyToHatch, uid)
+						if ok and ready then return true end
+					end
+				end
+				return false
+			end,
+			Train = function(seconds, stop, keep)
+				local ok, reason, _, trained = fn63(seconds, stop, keep)
+				return ok, reason, trained
+			end,
+			Steal = fn51,
+			Failure = function() return tbl21.FarmPausedReason end,
+			Status = function(mode, message) fn30(mode) fn29(message) end,
+			Yield = task.wait,
+		})
+		environment.__SkiderSaeFarm = tbl21.FarmPlanner
+	end
+	do
+		local createHalloween = function(context)
+			local player = context.Player
+			local world = context.World
+			local storage = context.Storage
+			local now = context.Clock or os.clock
+			local waitFor = context.Wait or task.wait
+			local state: { [string]: any } = {
+				Build = "halloween-v742-r11",
+				Active = true,
+				Mode = "Idle",
+				Task = "Waiting for Halloween config",
+				Blocked = {},
+				Requests = {},
+				Modules = {},
+				ModuleTimes = {},
+				Modes = {},
+				NextShotId = 0,
+				LastShot = -math.huge,
+				LastAttack = -math.huge,
+				LastPurchase = -math.huge,
+				LastJoin = -math.huge,
+				CompletedTrips = 0,
+				PurchasedEggs = 0,
+				NextFarmVisit = 0,
+			}
+			local controller = { State = state, Game = context.Game or game }
+			local function config()
+				local value = context.GetConfig()
+				return type(value) == "table" and value or {}
+			end
+			local function enabled(mode)
+				return state.Active and state.HaltedReason == nil and config()[mode] == true and state.Blocked[mode] == nil
+			end
+			local function status(mode, message)
+				if state.HaltedReason and mode ~= "Paused" and string.sub(message, 1, 7) ~= "Paused:" then
+					return
+				end
+				state.Mode = mode
+				state.Task = message
+				if context.SetMode then
+					context.SetMode("Halloween / " .. mode)
+				end
+				if context.SetTask then
+					context.SetTask(message)
+				end
+			end
+			local function pause(mode, reason)
+				state.Blocked[mode] = tostring(reason)
+				state.HaltedReason = mode .. ": " .. tostring(reason)
+				status(mode, "Paused: " .. tostring(reason))
+				return true
+			end
+			local function module(path)
+				if state.Modules[path] then
+					return state.Modules[path]
+				end
+				local current = storage
+				for name in string.gmatch(path, "[^/]+") do
+					current = current and current:FindFirstChild(name)
+					if not current then
+						return nil
+					end
+				end
+				if not current:IsA("ModuleScript") then
+					return nil
+				end
+				waitFor()
+				local started = now()
+				local ok, result = pcall(context.Require or require, current)
+				state.ModuleTimes[path] = now() - started
+				if ok and type(result) == "table" then
+					state.Modules[path] = result
+					return result
+				end
+				return nil
+			end
+			local function connected()
+				if context.Connected then
+					return context.Connected()
+				end
+				local network = game:GetService("NetworkClient")
+				return player.Parent ~= nil and network:FindFirstChildOfClass("ClientReplicator") ~= nil
+			end
+			local function avatar()
+				local character = player.Character
+				local root = character and character:FindFirstChild("HumanoidRootPart")
+				local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+				if not root or not root:IsA("BasePart") or not humanoid or humanoid.Health <= 0 then
+					return nil
+				end
+				return root, humanoid, character
+			end
+			local function map()
+				return world:FindFirstChild("HalloweenDimension")
+			end
+			local function inside()
+				return player:GetAttribute("InHalloweenDimension") == true
+			end
+			local function flag(path, name, fallback)
+				local flags = module(path)
+				local value = flags and flags[name]
+				if type(value) == "table" and type(value.Get) == "function" then
+					local ok, result = pcall(value.Get, value)
+					if ok then
+						return result
+					end
+				end
+				return fallback
+			end
+			local function remote(group, name)
+				local remotes = module("Shared/Remotes")
+				return remotes and remotes[group] and remotes[group][name]
+			end
+			local function invoke(mode, endpoint, ...)
+				if not endpoint then
+					return false, "Required remote is missing"
+				end
+				if not enabled(mode) or not connected() then
+					return false, "Cancelled"
+				end
+				if state.Requests[endpoint] then
+					return false, "A previous request is still pending"
+				end
+				local arguments = table.pack(...)
+				local pending = { Done = false }
+				state.Requests[endpoint] = pending
+				task.defer(function()
+					if not enabled(mode) or not connected() then
+						pending.Result = table.pack(false, "Cancelled")
+						pending.Done = true
+						return
+					end
+					pending.Result = table.pack(pcall(function()
+						return endpoint:InvokeServer(table.unpack(arguments, 1, arguments.n))
+					end))
+					pending.Done = true
+				end)
+				local deadline = now() + 10
+				while not pending.Done and enabled(mode) and connected() and now() < deadline do
+					waitFor(0.1)
+				end
+				if not pending.Done then
+					return false, "Request was not confirmed; automatic retry stopped"
+				end
+				state.Requests[endpoint] = nil
+				local result = pending.Result
+				if not result[1] then
+					return false, tostring(result[2])
+				end
+				return true, table.unpack(result, 2, result.n)
+			end
+			local function confirm(mode, predicate, seconds)
+				local deadline = now() + (seconds or 6)
+				repeat
+					if predicate() then
+						return true
+					end
+					if not enabled(mode) or not connected() then
+						return false
+					end
+					waitFor(0.1)
+				until now() >= deadline
+				return false
+			end
+			local function position(instance)
+				if not instance then
+					return nil
+				end
+				if instance:IsA("BasePart") then
+					return instance.Position
+				end
+				if instance:IsA("Attachment") then
+					return instance.WorldPosition
+				end
+				if instance:IsA("Model") then
+					return instance:GetPivot().Position
+				end
+				return nil
+			end
+			local function flatDistance(a, b)
+				return (Vector3.new(a.X - b.X, 0, a.Z - b.Z)).Magnitude
+			end
+			local function move(mode, target, radius)
+				local root, humanoid, character = avatar()
+				if not root then
+					return false, "Character unavailable"
+				end
+				if not enabled(mode) or not connected() then
+					return false, "Cancelled"
+				end
+				local destination = typeof(target) == "Vector3" and target or position(target)
+				if not destination then
+					return false, "Destination missing"
+				end
+				radius = radius or 5
+				if (root.Position - destination).Magnitude <= radius then
+					return true
+				end
+				local delta = destination - root.Position
+				local intermediate = delta.Magnitude > 400 and root.Position + delta.Unit * 400 or destination
+				local waypoints
+				local prepared = state.EscapeRoute
+				if
+					prepared
+					and prepared.Character == character
+					and now() < prepared.Expires
+					and (root.Position - prepared.Start).Magnitude < 15
+					and (destination - prepared.Destination).Magnitude < 15
+				then
+					destination = prepared.Destination
+					waypoints = prepared.Waypoints
+					state.EscapeRoute = nil
+				else
+					local pathfinding = context.Pathfinding or game:GetService("PathfindingService")
+					local path =
+						pathfinding:CreatePath({ AgentRadius = 2, AgentHeight = 5, AgentCanJump = true, WaypointSpacing = 12 })
+					local ok = pcall(path.ComputeAsync, path, root.Position, intermediate)
+					if not ok or path.Status ~= Enum.PathStatus.Success then
+						if path.Destroy then
+							path:Destroy()
+						end
+						return false, "No walkable path"
+					end
+					waypoints = path:GetWaypoints()
+					if path.Destroy then
+						path:Destroy()
+					end
+				end
+				if #waypoints > 256 then
+					return false, "Path exceeds the navigation budget"
+				end
+				local compact = {}
+				for index, waypoint in ipairs(waypoints) do
+					local previous = compact[#compact]
+					local following = waypoints[index + 1]
+					local redundant = false
+					if
+						previous
+						and following
+						and waypoint.Action ~= Enum.PathWaypointAction.Jump
+						and following.Action ~= Enum.PathWaypointAction.Jump
+					then
+						local incoming = waypoint.Position - previous.Position
+						local outgoing = following.Position - waypoint.Position
+						redundant = incoming.Magnitude > 0.1
+							and outgoing.Magnitude > 0.1
+							and incoming.Unit:Dot(outgoing.Unit) > 0.995
+					end
+					if not redundant then
+						table.insert(compact, waypoint)
+					end
+				end
+				waypoints = compact
+				local started = now()
+				local initial = root.Position
+				local wasCarrying = player:GetAttribute("HalloweenCarrying") == true
+				local wasInside = inside()
+				local wasArena = player:GetAttribute("InPumpkinArena")
+				local wasRace = player:GetAttribute("RaceId")
+				local previousPosition = root.Position
+				local function changedScene()
+					local changed = inside() ~= wasInside
+						or player:GetAttribute("InPumpkinArena") ~= wasArena
+						or player:GetAttribute("RaceId") ~= wasRace
+						or (root.Position - previousPosition).Magnitude > 400
+					previousPosition = root.Position
+					return changed
+				end
+				local arrivalTolerance = math.clamp((humanoid.WalkSpeed or 16) * 0.08, 3, 8)
+				local waypointReached = false
+				local connection = humanoid.MoveToFinished
+					and humanoid.MoveToFinished:Connect(function(reached)
+						waypointReached = reached == true
+					end)
+				local navigation: { [string]: any } = { Cancelled = false }
+				function navigation.Cancel()
+					if navigation.Cancelled then
+						return
+					end
+					navigation.Cancelled = true
+					if connection then
+						connection:Disconnect()
+						connection = nil
+					end
+					if state.Navigation ~= navigation then
+						return
+					end
+					state.Navigation = nil
+					local point = navigation.LastPoint
+					if
+						point
+						and root.Parent
+						and humanoid.Parent
+						and player.Character == character
+						and typeof(humanoid.WalkToPoint) == "Vector3"
+						and (humanoid.WalkToPoint - point).Magnitude < 0.05
+					then
+						humanoid:MoveTo(root.Position)
+						humanoid:Move(Vector3.zero, false)
+					end
+				end
+				if state.Navigation then
+					state.Navigation.Cancel()
+				end
+				state.Navigation = navigation
+				local function followPath()
+					for _, waypoint in ipairs(waypoints) do
+						waypointReached = false
+						if wasCarrying and player:GetAttribute("HalloweenCarrying") ~= true then
+							return false, "Carry changed"
+						end
+						if changedScene() then
+							return false, "Transition"
+						end
+						if not enabled(mode) or not connected() or player.Character ~= character then
+							if humanoid.Parent then
+								humanoid:Move(Vector3.zero, false)
+							end
+							return false, "Cancelled"
+						end
+						if (root.Position - destination).Magnitude <= radius then
+							return true
+						end
+						if waypoint.Action == Enum.PathWaypointAction.Jump then
+							humanoid.Jump = true
+						end
+						navigation.LastPoint = waypoint.Position
+						humanoid:MoveTo(waypoint.Position)
+						local waypointDeadline = now() + 5
+						while
+							flatDistance(root.Position, waypoint.Position) > 3
+							and not (waypointReached and flatDistance(root.Position, waypoint.Position) <= arrivalTolerance)
+						do
+							if (root.Position - destination).Magnitude <= radius then
+								return true
+							end
+							if wasCarrying and player:GetAttribute("HalloweenCarrying") ~= true then
+								return false, "Carry changed"
+							end
+							if changedScene() then
+								return false, "Transition"
+							end
+							if not enabled(mode) or not connected() or player.Character ~= character then
+								return false, "Cancelled"
+							end
+							if humanoid.Health <= 0 then
+								return false, "Character unavailable"
+							end
+							if now() - started > 12 then
+								return false, (root.Position - initial).Magnitude > 3 and "Moving" or "Navigation stalled"
+							end
+							if now() > waypointDeadline then
+								return false, "Navigation stalled"
+							end
+							waitFor(0.1)
+						end
+						waitFor()
+					end
+					return (root.Position - destination).Magnitude <= radius, "Moving"
+				end
+				local succeeded, arrived, reason = pcall(followPath)
+				state.LastNavigation = {
+					Reason = reason,
+					Elapsed = now() - started,
+					Waypoints = #waypoints,
+					DistanceLeft = (root.Position - destination).Magnitude,
+				}
+				navigation.Cancel()
+				if not succeeded then
+					error(arrived)
+				end
+				return arrived, reason
+			end
+			local function approach(mode, target, radius)
+				local arrived, reason = move(mode, target, radius)
+				if
+					not arrived
+					and reason ~= "Moving"
+					and reason ~= "Transition"
+					and reason ~= "Carry changed"
+					and reason ~= "Cancelled"
+					and reason ~= "Character unavailable"
+				then
+					pause(mode, reason)
+				end
+				return arrived
+			end
+			local function portalPoint(portal)
+				local hitbox = portal and portal:FindFirstChild("Hitbox", true)
+				if not hitbox or not hitbox:IsA("BasePart") then
+					return nil
+				end
+				return hitbox.CFrame:PointToWorldSpace(Vector3.new(0, -hitbox.Size.Y / 2 + 3, 0))
+			end
+			local function enter(mode)
+				if inside() then
+					local root = avatar()
+					local transition = player:GetAttribute("HalloweenTransition")
+					local covering = type(transition) == "string" and string.match(transition, "^%d+:cover:%a+$") ~= nil
+					if covering or root and math.abs(root.AssemblyLinearVelocity.Y) > 6 then
+						status(mode, "Waiting for the Halloween transition")
+						return false
+					end
+					return true
+				end
+				local save = context.GetSave()
+				local eligibility = module("Shared/Util/HalloweenDimensionEligibility")
+				if not save or not eligibility or type(eligibility.IsEligible) ~= "function" then
+					status(mode, "Waiting for Halloween data")
+					return false
+				end
+				if not eligibility.IsEligible(save.SpeedPower or 0) then
+					status(mode, "Train more speed to unlock Halloween")
+					return false
+				end
+				if not save.GuardTutorialProgress or save.GuardTutorialProgress.Completed ~= true then
+					status(mode, "Complete the guard tutorial first")
+					return false
+				end
+				if flag("Shared/Flags/HalloweenDimensionFlags", "ContentEnabled", false) ~= true then
+					status(mode, "Halloween is currently unavailable")
+					return false
+				end
+				local mainWorld = world:FindFirstChild("World")
+				local portal = mainWorld and mainWorld:FindFirstChild("HalloweenDimensionPortal")
+				local point = portalPoint(portal)
+				if not point then
+					status(mode, "Waiting for the Halloween portal")
+					return false
+				end
+				status(mode, "Walking to the Halloween portal")
+				if approach(mode, point, 4) then
+					if not confirm(mode, inside, 8) then
+						pause(mode, "Portal entry was not confirmed")
+					end
+				end
+				return false
+			end
+			local function safePoint()
+				local currentMap = map()
+				local zones = currentMap and currentMap:FindFirstChild("Zones")
+				local safe = zones and zones:FindFirstChild("SafeZone")
+				local root, humanoid = avatar()
+				if not safe or not safe:IsA("BasePart") or not root then
+					return nil
+				end
+				local half = safe.Size / 2
+				if world.Raycast then
+					if state.SafeFloorMap ~= currentMap or not state.SafeFloorPoints then
+						local points = {}
+						local ray = RaycastParams.new()
+						ray.FilterType = Enum.RaycastFilterType.Include
+						ray.FilterDescendantsInstances = { currentMap:FindFirstChild("Ground") or currentMap }
+						ray.RespectCanCollide = true
+						local clearance = math.max(3, (humanoid.HipHeight or 2) + root.Size.Y / 2)
+						for _, x in ipairs({ -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75 }) do
+							for _, z in ipairs({ -0.85, 0, 0.85 }) do
+								local origin = safe.CFrame:PointToWorldSpace(Vector3.new(x * half.X, half.Y + 8, z * half.Z))
+								local hit = world:Raycast(origin, Vector3.new(0, -safe.Size.Y - 32, 0), ray)
+								if hit then
+									table.insert(points, hit.Position + Vector3.new(0, clearance, 0))
+								end
+							end
+							waitFor()
+						end
+						if #points == 0 then
+							return nil
+						end
+						state.SafeFloorMap, state.SafeFloorPoints = currentMap, points
+					end
+					local best, distance
+					for _, point in ipairs(state.SafeFloorPoints) do
+						local candidate = flatDistance(root.Position, point)
+						if not distance or candidate < distance then
+							best, distance = point, candidate
+						end
+					end
+					return best
+				end
+				local localPoint = safe.CFrame:PointToObjectSpace(root.Position)
+				return safe.CFrame:PointToWorldSpace(
+					Vector3.new(
+						math.clamp(localPoint.X, -half.X + 12, half.X - 12),
+						-half.Y + 3,
+						math.clamp(localPoint.Z, -half.Z + 12, half.Z - 12)
+					)
+				)
+			end
+			local function prepareEscape(mode)
+				local root, _, character = avatar()
+				local destination = safePoint()
+				if not root or not destination then
+					pause(mode, "Escape route is unavailable")
+					return false
+				end
+				local pathfinding = context.Pathfinding or game:GetService("PathfindingService")
+				local path =
+					pathfinding:CreatePath({ AgentRadius = 2, AgentHeight = 5, AgentCanJump = true, WaypointSpacing = 12 })
+				local ok = pcall(path.ComputeAsync, path, root.Position, destination)
+				local points = ok and path.Status == Enum.PathStatus.Success and path:GetWaypoints() or nil
+				if path.Destroy then
+					path:Destroy()
+				end
+				if points and (#points == 0 or flatDistance(points[#points].Position, destination) > 8) then
+					points = nil
+				end
+				if not points or #points > 256 then
+					pause(mode, "No bounded escape route to the safe zone")
+					return false
+				end
+				state.EscapeRoute = {
+					Character = character,
+					Start = root.Position,
+					Destination = destination,
+					Waypoints = points,
+					Expires = now() + 10,
+				}
+				return true
+			end
+			local function inSafeZone()
+				local root = avatar()
+				local zones = map() and map():FindFirstChild("Zones")
+				local safe = zones and zones:FindFirstChild("SafeZone")
+				if not root or not safe then
+					return false
+				end
+				local point = safe.CFrame:PointToObjectSpace(root.Position)
+				local half = safe.Size / 2
+				return math.abs(point.X) <= math.max(half.X - 4, 0)
+					and math.abs(point.Y) <= half.Y
+					and math.abs(point.Z) <= math.max(half.Z - 4, 0)
+			end
+			local function recoverEgg(mode)
+				if player:GetAttribute("HalloweenCarrying") ~= true then
+					return false
+				end
+				local point = safePoint()
+				if not point then
+					return pause(mode, "Safe zone is unavailable")
+				end
+				local delivered = player:GetAttribute("HalloweenDelivered")
+				status(mode, "Returning the Halloween egg to the safe zone")
+				local arrived = approach(mode, point, 5)
+				if state.HaltedReason then
+					return true
+				end
+				if arrived or player:GetAttribute("HalloweenCarrying") ~= true then
+					if confirm(mode, function()
+						return player:GetAttribute("HalloweenCarrying") ~= true
+					end, 8) then
+						if player:GetAttribute("HalloweenDelivered") ~= delivered then
+							state.CompletedTrips += 1
+							state.StartedFromSafe = true
+						else
+							state.LostEggs = (state.LostEggs or 0) + 1
+							state.StartedFromSafe = false
+							state.NextPickup = now() + 3
+							if context.BalanceFarm then state.NextFarmVisit = now() + 60 end
+							status(mode, "Egg lost; returning to the safe zone before another attempt")
+						end
+					else
+						pause(mode, "Egg delivery was not confirmed")
+					end
+				end
+				return true
+			end
+			local function farm()
+				local mode = "Farm"
+				if not enabled(mode) then
+					return false
+				end
+				if not enter(mode) then
+					return inside() or state.Task == "Walking to the Halloween portal"
+				end
+				if recoverEgg(mode) then
+					return true
+				end
+				if not state.StartedFromSafe then
+					if inSafeZone() then
+						state.StartedFromSafe = true
+					else
+						local point = safePoint()
+						if not point then
+							return pause(mode, "Safe zone is unavailable")
+						end
+						status(mode, "Returning to the safe zone before the next egg")
+						approach(mode, point, 5)
+						return true
+					end
+				end
+				if now() < (state.NextPickup or 0) then
+					status(mode, "Recovering before the next egg")
+					return true
+				end
+				local save = context.GetSave()
+				local eggShop = (save.HalloweenTokens or 0) >= 2250 and module("Data/HalloweenDimensionEgg") or nil
+				if
+					eggShop
+					and type(eggShop.Price) == "number"
+					and (save.HalloweenTokens or 0) >= eggShop.Price
+					and now() - state.LastPurchase >= 3
+				then
+					local shop = map() and map():FindFirstChild("EggShop")
+					local plinth = shop and shop:FindFirstChild("Plinth")
+					if not plinth then
+						return pause(mode, "Halloween egg shop is unavailable")
+					end
+					status(mode, "Walking to the Halloween egg shop")
+					if not approach(mode, plinth, 8) then
+						return true
+					end
+					status(mode, "Buying a Halloween Dimension Egg")
+					local previous = save.HalloweenTokens or 0
+					local previousEggs = {}
+					for uid in pairs(save.EggInventory or {}) do
+						previousEggs[uid] = true
+					end
+					state.LastPurchase = now()
+					local ok, accepted, reason = invoke(mode, remote("HalloweenDimension", "AskBuyEgg"))
+					if not ok or accepted ~= true then
+						return pause(mode, reason or accepted or "Egg purchase failed")
+					end
+					if
+						not confirm(mode, function()
+							return (context.GetSave().HalloweenTokens or previous) < previous
+						end)
+					then
+						return pause(mode, "Egg purchase was not replicated")
+					end
+					state.PurchasedEggs += 1
+					if context.OnEggAcquired then
+						confirm(mode, function()
+							local acquired = false
+							for uid in pairs(context.GetSave().EggInventory or {}) do
+								if not previousEggs[uid] then
+									context.OnEggAcquired(uid)
+									acquired = true
+								end
+							end
+							return acquired
+						end)
+					end
+					return true
+				end
+				local root = avatar()
+				if not root then
+					return true
+				end
+				local folder = map():FindFirstChild("WorldEggs")
+				if not folder then
+					status(mode, "Waiting for Halloween eggs")
+					return true
+				end
+				local best, bestDistance
+				local maxZone = 0
+				for zone = 1, 3 do
+					local required =
+						flag("Shared/Flags/HalloweenDimensionFlags", "GhostRecommendedSpeedZone" .. zone, math.huge)
+					if (save.SpeedPower or 0) >= required then
+						maxZone = zone
+					end
+				end
+				if maxZone >= 3 then
+					local manor = module("Shared/Util/ManorInterior")
+					if not manor or not manor.GateOpen() then
+						maxZone = 2
+					end
+				end
+				for index, egg in ipairs(folder:GetChildren()) do
+					if index % 16 == 0 then
+						waitFor()
+					end
+					local zone = egg:GetAttribute("Zone")
+					if
+						egg:IsA("Model")
+						and type(zone) == "number"
+						and zone <= maxZone
+						and egg:GetAttribute("HalloweenEggCanPickUp") == true
+					then
+						local uid = egg:GetAttribute("HalloweenEggUid")
+						local distance = (egg:GetPivot().Position - root.Position).Magnitude
+						if type(uid) == "string" and (not bestDistance or distance < bestDistance) then
+							best, bestDistance = egg, distance
+						end
+					end
+				end
+				if not best then
+					status(mode, "Waiting for an egg in a suitable zone")
+					return true
+				end
+				state.Zone = best:GetAttribute("Zone")
+				status(mode, "Walking to a Halloween egg in zone " .. state.Zone)
+				if not approach(mode, best, 7) then
+					return true
+				end
+				if not best.Parent or best:GetAttribute("HalloweenEggCanPickUp") ~= true then
+					return true
+				end
+				if context.ImmediateReturn and not prepareEscape(mode) then
+					return true
+				end
+				local ok, accepted, reason =
+					invoke(mode, remote("HalloweenDimension", "AskCarryEgg"), best:GetAttribute("HalloweenEggUid"))
+				if not ok or accepted ~= true then
+					return pause(mode, reason or accepted or "Egg pickup rejected")
+				end
+				if not confirm(mode, function()
+					return player:GetAttribute("HalloweenCarrying") == true
+				end) then
+					return pause(mode, "Egg pickup was not replicated")
+				end
+				if context.ImmediateReturn then
+					return recoverEgg(mode)
+				end
+				return true
+			end
+		
+			local function clearQuestTracking()
+				local owned = state.OwnGhostCast or state.MineConnection ~= nil or state.MineScene ~= nil
+				if state.MineConnection then
+					state.MineConnection:Disconnect()
+					state.MineConnection = nil
+				end
+				state.MineScene = nil
+				state.Mines = nil
+				local _, humanoid = avatar()
+				if owned and humanoid then
+					humanoid:Move(Vector3.zero, false)
+				end
+			end
+			local function steerQuest(data)
+				local root, humanoid = avatar()
+				local slot = player:GetAttribute("GhostDogChase")
+				if not root or type(slot) ~= "number" then
+					return
+				end
+				local scene = world:FindFirstChild("GhostDogChaseScene")
+				if scene ~= state.MineScene then
+					clearQuestTracking()
+					state.MineScene = scene
+					state.Mines = {}
+					if scene then
+						local function add(child)
+							if child:IsA("Model") and string.find(string.lower(child.Name), "mine", 1, true) then
+								state.Mines[child] = true
+							end
+						end
+						state.MineConnection = scene.ChildAdded:Connect(add)
+						for index, child in ipairs(scene:GetChildren()) do
+							add(child)
+							if index % 16 == 0 then
+								waitFor()
+							end
+						end
+					end
+				end
+				local chase = data.Chase
+				local radial = root.Position - chase.Center
+				local angle = math.atan2(radial.Z, radial.X)
+				local distance = ((angle - chase.StartAngle) % (math.pi * 2)) * chase.Radius
+				local frame = data.ChaseFrame(slot, distance)
+				local current = frame:PointToObjectSpace(root.Position).X
+				local best, bestScore = 0, math.huge
+				for _, candidate in ipairs({ -11, 0, 11 }) do
+					local score = math.abs(candidate - current) * 0.2
+					for mine in pairs(state.Mines or {}) do
+						if not mine.Parent then
+							state.Mines[mine] = nil
+						else
+							local point = frame:PointToObjectSpace(mine:GetPivot().Position)
+							local ahead = -point.Z
+							if ahead > -5 and ahead < 75 then
+								score += math.max(0, 8 - math.abs(candidate - point.X)) * (2 - math.clamp(ahead / 75, 0, 1)) * 20
+							end
+						end
+					end
+					if score < bestScore then
+						best, bestScore = candidate, score
+					end
+				end
+				humanoid:Move(frame.RightVector * math.clamp((best - current) * 0.3, -1, 1), false)
+			end
+			local function runGhostCast(mode, data)
+				local native = module("Controllers/Game/GhostDogQuestController")
+				if not native or type(native.PrepareCast) ~= "function" or type(native.Hooked) ~= "function" then
+					return pause(mode, "Ghost Dog controller is unavailable in this version")
+				end
+				local ready, result = pcall(native.PrepareCast)
+				if not ready or result ~= true then
+					status(mode, "Waiting for the fishing sequence")
+					return true
+				end
+				local completed = false
+				local outcome
+				state.OwnGhostCast = true
+				task.defer(function()
+					if not enabled(mode) or not connected() then
+						outcome = table.pack(true, false)
+						completed = true
+						return
+					end
+					outcome = table.pack(pcall(native.Hooked))
+					completed = true
+				end)
+				local deadline = now() + 240
+				while not completed and enabled(mode) and connected() and now() < deadline do
+					status(mode, "Completing the Ghost Dog fishing sequence")
+					steerQuest(data)
+					waitFor(0.1)
+				end
+				clearQuestTracking()
+				state.OwnGhostCast = false
+				if not completed then
+					local abort = remote("GhostDogQuest", "Abort")
+					if abort and connected() then
+						task.defer(function()
+							pcall(abort.InvokeServer, abort)
+						end)
+					end
+					if enabled(mode) then
+						return pause(mode, "Ghost Dog sequence did not finish within its time limit")
+					end
+					return true
+				end
+				if not outcome[1] then
+					return pause(mode, outcome[2])
+				end
+				if
+					not confirm(mode, function()
+						local save = context.GetSave()
+						return save and save.GhostDogQuest and save.GhostDogQuest.Stage >= data.Stage.Done
+					end, 8)
+				then
+					return pause(mode, "Ghost Dog completion was not confirmed")
+				end
+				status(mode, "Ghost Dog quest complete; Train Pass unlocked")
+				return true
+			end
+			local function ghostQuest()
+				local mode = "Ghost Dog"
+				if not enabled(mode) then
+					return false
+				end
+				local save = context.GetSave()
+				local quest = save and save.GhostDogQuest
+				local data = module("Data/GhostDogQuest")
+				if not quest or not data then
+					status(mode, "Waiting for Ghost Dog data")
+					return false
+				end
+				if quest.Stage >= data.Stage.Done then
+					return false
+				end
+				if flag("Shared/Flags/GhostDogQuestFlags", "Enabled", false) ~= true then
+					return false
+				end
+				if not enter(mode) then
+					return inside() or state.Task == "Walking to the Halloween portal"
+				end
+				if recoverEgg(mode) then
+					return true
+				end
+				local currentMap = map()
+				local folder = currentMap and currentMap:FindFirstChild(data.FolderName)
+				local markers = folder and folder:FindFirstChild(data.MarkersName)
+				if not markers then
+					status(mode, "Waiting for Ghost Dog map markers")
+					return true
+				end
+				if quest.Stage == data.Stage.HasRod then
+					status(mode, "Walking to the Ghost Dog fishing spot")
+					local spot = markers:FindFirstChild("CastSpot")
+					if not spot then
+						return pause(mode, "Ghost Dog CastSpot is missing")
+					end
+					if approach(mode, spot, data.CastDistance - 2) then
+						return runGhostCast(mode, data)
+					end
+					return true
+				end
+				if quest.Stage == data.Stage.Collecting then
+					local root = avatar()
+					if not root then
+						return true
+					end
+					local target, targetMarker, nearest
+					for _, artifact in ipairs(data.Artifacts) do
+						local marker = markers:FindFirstChild(artifact.Marker)
+						if not (quest.Artifacts and quest.Artifacts[artifact.Id]) and marker then
+							local distance = (position(marker) - root.Position).Magnitude
+							if not nearest or distance < nearest then
+								target, targetMarker, nearest = artifact, marker, distance
+							end
+						end
+					end
+					if target then
+						status(mode, "Collecting " .. target.DisplayName)
+						if not approach(mode, targetMarker, data.PickupDistance - 2) then
+							return true
+						end
+						local ok, accepted, reason = invoke(mode, remote("GhostDogQuest", "Collect"), target.Id)
+						if not ok or accepted ~= true then
+							return pause(mode, reason or accepted or "Artifact collection rejected")
+						end
+						if
+							not confirm(mode, function()
+								local snapshot = context.GetSave()
+								local current = snapshot and snapshot.GhostDogQuest
+								return current and current.Artifacts and current.Artifacts[target.Id] == true
+							end)
+						then
+							return pause(mode, "Artifact collection was not replicated")
+						end
+						return true
+					end
+					for _, artifact in ipairs(data.Artifacts) do
+						if not (quest.Artifacts and quest.Artifacts[artifact.Id]) then
+							return pause(mode, "An unfinished artifact has no map marker")
+						end
+					end
+				end
+				local npcName = quest.Stage == data.Stage.Reunion and "Fisherman" or "Dog"
+				local npcs = module("Controllers/Game/GhostDogQuestController/Npcs")
+				local getter = npcs and npcs[npcName]
+				local npc = type(getter) == "function" and getter() or nil
+				if not npc or not npc.Model then
+					status(mode, "Waiting for " .. npcName)
+					return true
+				end
+				status(mode, "Talking to " .. npcName)
+				if not approach(mode, npc.Model, data.TalkDistance - 3) then
+					return true
+				end
+				local previous = quest.Stage
+				local ok, response, reason = invoke(mode, remote("GhostDogQuest", "Talk"), npcName)
+				if not ok or type(response) ~= "string" then
+					return pause(mode, reason or response or "Dialogue rejected")
+				end
+				if
+					not confirm(mode, function()
+						local snapshot = context.GetSave()
+						return snapshot and snapshot.GhostDogQuest and snapshot.GhostDogQuest.Stage > previous
+					end, 8)
+				then
+					return pause(mode, "Quest stage did not advance after dialogue")
+				end
+				return true
+			end
+		
+			local bossMode = "Boss / The Hollow"
+			local function restoreRaceInput()
+				local record = state.RaceInput
+				state.RaceVector = nil
+				if record and record.Controls.GetMoveVector == record.Callback then
+					record.Controls.GetMoveVector = record.Original
+				end
+				state.RaceInput = nil
+			end
+			local function bindRaceInput()
+				if state.RaceInput then
+					return true
+				end
+				local scripts = player:FindFirstChild("PlayerScripts")
+				local playerModule = scripts and scripts:FindFirstChild("PlayerModule")
+				if not playerModule then
+					return false
+				end
+				local ok, result = pcall(context.Require or require, playerModule)
+				if not ok or type(result.GetControls) ~= "function" then
+					return false
+				end
+				local controls = result:GetControls()
+				if not controls or type(controls.GetMoveVector) ~= "function" then
+					return false
+				end
+				local original = controls.GetMoveVector
+				local function callback(self, ...)
+					if state.Active and state.RaceVector and player:GetAttribute("RaceId") ~= nil then
+						return state.RaceVector
+					end
+					return original(self, ...)
+				end
+				state.RaceInput = { Controls = controls, Original = original, Callback = callback }
+				controls.GetMoveVector = callback
+				return true
+			end
+			local function race()
+				local raceId = player:GetAttribute("RaceId")
+				if raceId == nil then
+					restoreRaceInput()
+					return false
+				end
+				if not enabled(bossMode) then
+					return true
+				end
+				local collection = context.Collection or game:GetService("CollectionService")
+				local track
+				for _, candidate in ipairs(collection:GetTagged("RaceTrack")) do
+					if candidate.Name == raceId then
+						track = candidate
+						break
+					end
+				end
+				local pathModule = module("Shared/Modules/RaceTrackPath")
+				local attachments = track and track:FindFirstChild("AttachmentTrack")
+				if not attachments or not pathModule then
+					status(bossMode, "Waiting for The Hollow track")
+					return true
+				end
+				local path = pathModule.new(attachments)
+				if not bindRaceInput() then
+					return pause(bossMode, "Race controls are unavailable")
+				end
+				local distance = 0
+				local deadline = now() + 300
+				local lastPosition, lastProgress = nil, now()
+				while enabled(bossMode) and connected() and player:GetAttribute("RaceId") == raceId and now() < deadline do
+					local root = avatar()
+					if not root then
+						break
+					end
+					if player:GetAttribute("RaceFinishPlace") ~= nil then
+						state.RaceVector = Vector3.zero
+						status(bossMode, "The Hollow finished; waiting for the result")
+					else
+						local speed = root.AssemblyLinearVelocity.Magnitude
+						local projected, offTrack = path:Project(root.Position, distance, 300, math.max(speed * 3, 300))
+						if offTrack > 120 then
+							projected = path:Project(root.Position, 0, 0, path.Length)
+						end
+						distance = projected
+						local target = path:FrameAt(distance + math.clamp(speed * 0.65 + 25, 35, 100)).Position
+						local localTarget = root.CFrame:PointToObjectSpace(target)
+						local angle = math.atan2(localTarget.X, -localTarget.Z)
+						state.RaceVector =
+							Vector3.new(math.clamp(angle * 1.4, -1, 1), 0, math.abs(angle) > 1.15 and -0.35 or -1)
+						local grid = player:GetAttribute("RaceGridFrame")
+						if lastPosition and (root.Position - lastPosition).Magnitude > 2 then
+							lastProgress = now()
+						end
+						if not lastPosition or (root.Position - lastPosition).Magnitude > 2 then
+							lastPosition = root.Position
+						end
+						if now() - lastProgress > 45 and typeof(grid) ~= "CFrame" then
+							restoreRaceInput()
+							return pause(bossMode, "The Hollow racer stopped progressing")
+						end
+						status(
+							bossMode,
+							"The Hollow / lap "
+								.. tostring(player:GetAttribute("RaceLap") or 0)
+								.. " / place "
+								.. tostring(player:GetAttribute("RacePlace") or "-")
+						)
+					end
+					waitFor(0.1)
+				end
+				restoreRaceInput()
+				if enabled(bossMode) and player:GetAttribute("RaceId") == raceId and now() >= deadline then
+					return pause(bossMode, "The Hollow race exceeded its time limit")
+				end
+				return true
+			end
+			local function leaveDimension(mode)
+				if not inside() then
+					return true
+				end
+				if recoverEgg(mode) then
+					return false
+				end
+				local currentMap = map()
+				local portal = currentMap and currentMap:FindFirstChild("ExitPortal", true)
+				local point = portalPoint(portal)
+				if not point then
+					status(mode, "Waiting for the Halloween exit portal")
+					return false
+				end
+				status(mode, "Walking out of the Halloween dimension")
+				if approach(mode, point, 4) then
+					if not confirm(mode, function()
+						return not inside()
+					end, 8) then
+						pause(mode, "Halloween exit was not confirmed")
+					end
+				end
+				return not inside()
+			end
+			local function hollowAvailable()
+				if not enabled(bossMode) or flag("Shared/Flags/TheHollowFlags", "ContentEnabled", false) ~= true then
+					return false
+				end
+				local save = context.GetSave()
+				local prizes = module("Data/TheHollow")
+				if save and save.TheHollow and prizes and type(prizes.OrderedPrizes) == "function" then
+					local ordered = prizes.OrderedPrizes()
+					local last = ordered[#ordered]
+					if last and save.TheHollow.Wins >= last.Config.Wins then
+						return false
+					end
+				end
+				local endsAt = world:GetAttribute("TheHollowJoinEndsAt")
+				return type(endsAt) == "number" and endsAt > world:GetServerTimeNow() + 5 and now() - state.LastJoin > 15
+			end
+			local function joinHollow()
+				if not hollowAvailable() then
+					return false
+				end
+				if inside() then
+					leaveDimension(bossMode)
+					return true
+				end
+				status(bossMode, "Joining The Hollow")
+				state.LastJoin = now()
+				local ok, accepted, reason = invoke(bossMode, remote("TheHollow", "AskEnter"))
+				if not ok or accepted ~= true then
+					return pause(bossMode, reason or accepted or "The Hollow entry rejected")
+				end
+				if not confirm(bossMode, function()
+					return player:GetAttribute("RaceId") ~= nil
+				end, 12) then
+					return pause(bossMode, "The Hollow entry was not replicated")
+				end
+				return race()
+			end
+			local function bossAvailable()
+				if not enabled(bossMode) or flag("Shared/Flags/PumpkinBossFlags", "ContentEnabled", false) ~= true then
+					return false
+				end
+				local manor = module("Shared/Util/ManorInterior")
+				local schedule = module("Shared/Util/PumpkinBossSchedule")
+				return manor
+					and type(manor.GateOpen) == "function"
+					and manor.GateOpen()
+					and schedule
+					and type(schedule.IsOpen) == "function"
+					and schedule.IsOpen(world:GetServerTimeNow()) == true
+			end
+			local function claimMastery(mode)
+				if not inside() then
+					return false
+				end
+				local save = context.GetSave()
+				local mastery = save and save.HalloweenDimension and save.HalloweenDimension.BossMastery
+				if not mastery or (mastery.Mastery or 0) < 1 then
+					return false
+				end
+				local data = module("Data/HalloweenBossMastery")
+				if not mastery or not data or type(data.Milestones) ~= "table" then
+					return false
+				end
+				for index, milestone in ipairs(data.Milestones) do
+					if index % 16 == 0 then
+						waitFor()
+					end
+					if mastery.Mastery >= milestone.Kills and not mastery.ClaimedMilestoneIds[milestone.Id] then
+						status(mode, "Claiming Pumpkin King mastery " .. milestone.Id)
+						local ok, accepted, reason = invoke(mode, remote("HalloweenDimension", "AskClaimMastery"), milestone.Id)
+						if not ok or accepted ~= true then
+							return pause(mode, reason or accepted or "Mastery claim rejected")
+						end
+						if
+							not confirm(mode, function()
+								local current = context.GetSave()
+								local value = current and current.HalloweenDimension and current.HalloweenDimension.BossMastery
+								return value and value.ClaimedMilestoneIds[milestone.Id] == true
+							end)
+						then
+							return pause(mode, "Mastery claim was not replicated")
+						end
+						return true
+					end
+				end
+				return false
+			end
+			local function equippedBat()
+				local _, humanoid, character = avatar()
+				if not character then
+					return nil
+				end
+				local backpack = player:FindFirstChild("Backpack")
+				local best
+				for _, parent in ipairs({ character, backpack }) do
+					if parent then
+						for _, tool in ipairs(parent:GetChildren()) do
+							if tool:IsA("Tool") and tool:GetAttribute("IsBat") == true then
+								best = tool
+								if parent == character then
+									return tool
+								end
+							end
+						end
+					end
+				end
+				if best then
+					humanoid:EquipTool(best)
+				end
+				return best
+			end
+			local function nearestDamageTarget(arena, root)
+				local collection = context.Collection or game:GetService("CollectionService")
+				local best, bestPoint, nearest
+				for index, part in ipairs(collection:GetTagged("BatDamagable")) do
+					if index % 16 == 0 then
+						waitFor()
+					end
+					if part:IsA("BasePart") and part:IsDescendantOf(arena) then
+						local health = part:GetAttribute("Health")
+						if type(health) ~= "number" or health > 0 then
+							local point = part.CFrame:PointToObjectSpace(root.Position)
+							local half = part.Size / 2
+							point = part.CFrame:PointToWorldSpace(
+								Vector3.new(
+									math.clamp(point.X, -half.X, half.X),
+									math.clamp(point.Y, -half.Y, half.Y),
+									math.clamp(point.Z, -half.Z, half.Z)
+								)
+							)
+							local distance = (point - root.Position).Magnitude
+							if not nearest or distance < nearest then
+								best, bestPoint, nearest = part, point, distance
+							end
+						end
+					end
+				end
+				return best, bestPoint, nearest
+			end
+			local function cannon(arena, root)
+				local folder = arena:FindFirstChild("Cannons")
+				local best, nearest
+				if not folder then
+					return nil
+				end
+				for _, model in ipairs(folder:GetChildren()) do
+					local owner = model:GetAttribute("OwnerUserId")
+					local zone = model:FindFirstChild("OperatorZone")
+					if zone and zone:IsA("BasePart") and (owner == 0 or owner == player.UserId) then
+						local distance = (zone.Position - root.Position).Magnitude
+						if not nearest or distance < nearest then
+							best, nearest = model, distance
+						end
+					end
+				end
+				return best
+			end
+			local function bossFight()
+				if player:GetAttribute("InPumpkinArena") ~= true then
+					return false
+				end
+				if not enabled(bossMode) then
+					return true
+				end
+				local arena = world:FindFirstChild("PumpkinArena")
+				if not arena then
+					status(bossMode, "Waiting for the Pumpkin King arena")
+					return true
+				end
+				if claimMastery(bossMode) then
+					return true
+				end
+				local deadline = now() + 10
+				while
+					enabled(bossMode)
+					and connected()
+					and player:GetAttribute("InPumpkinArena") == true
+					and now() < deadline
+				do
+					local root, humanoid = avatar()
+					if not root then
+						break
+					end
+					local phase = arena:GetAttribute("Phase")
+					state.BossPhase = phase
+					status(bossMode, "Pumpkin King / " .. tostring(phase or "loading"))
+					if phase == "Defeated" then
+						state.DefeatedAt = state.DefeatedAt or now()
+						if now() - state.DefeatedAt > 12 then
+							local collection = context.Collection or game:GetService("CollectionService")
+							for _, exit in ipairs(collection:GetTagged("PumpkinBossExit")) do
+								if exit:IsDescendantOf(world) then
+									approach(bossMode, exit, 4)
+									return true
+								end
+							end
+						end
+					elseif phase == "Shield" or phase == "Stunned" then
+						local target = cannon(arena, root)
+						local zone = target and target:FindFirstChild("OperatorZone")
+						if zone then
+							local zoneUtil = module("Shared/Util/ShrinePadZone")
+							local inZone = zoneUtil and zoneUtil.ContainsPoint(zone, root.Position)
+							if not inZone then
+								approach(bossMode, Vector3.new(zone.Position.X, root.Position.Y, zone.Position.Z), 2)
+							elseif target:GetAttribute("Ready") == true then
+								local cooldown = flag("Shared/Flags/PumpkinBossFlags", "CannonFireCooldown", 1)
+								if now() - state.LastShot >= cooldown + 0.1 then
+									local endpoint = remote("PumpkinBoss", "CannonFire")
+									if not endpoint then
+										return pause(bossMode, "Cannon remote is missing")
+									end
+									state.LastShot = now()
+									state.NextShotId += 1
+									endpoint:FireServer(state.NextShotId)
+								end
+							end
+						end
+					elseif phase == "Brute" or phase == "King" then
+						state.DefeatedAt = nil
+						local target, point, distance = nearestDamageTarget(arena, root)
+						local tool = equippedBat()
+						if not tool then
+							return pause(bossMode, "No bat is available")
+						end
+						if target then
+							local batConfig = module("Shared/Modules/BatController/Config")
+							local range = batConfig and tonumber(batConfig.Range) or 7
+							if distance > math.max(range - 1, 3) then
+								approach(bossMode, Vector3.new(point.X, root.Position.Y, point.Z), math.max(range - 2, 2))
+							elseif
+								now() - state.LastAttack
+								>= flag("Shared/Flags/PumpkinBossFlags", "AttackCooldownSeconds", 1.5) + 0.1
+							then
+								state.LastAttack = now()
+								tool:Activate()
+							end
+						end
+					end
+					waitFor(0.2)
+				end
+				return true
+			end
+			local function joinBoss()
+				if not bossAvailable() then
+					return false
+				end
+				if not enter(bossMode) then
+					return inside() or state.Task == "Walking to the Halloween portal"
+				end
+				if recoverEgg(bossMode) then
+					return true
+				end
+				local currentMap = map()
+				local portal = currentMap and currentMap:FindFirstChild("BossPortal")
+				local point = portalPoint(portal)
+				if not point then
+					status(bossMode, "Waiting for the Pumpkin King portal")
+					return true
+				end
+				status(bossMode, "Walking to the Pumpkin King portal")
+				if approach(bossMode, point, 4) then
+					if
+						not confirm(bossMode, function()
+							return player:GetAttribute("InPumpkinArena") == true
+						end, 10)
+					then
+						return pause(bossMode, "Pumpkin King entry was not confirmed")
+					end
+				end
+				return true
+			end
+			local function anyConfigured()
+				local current = config()
+				return state.Active and (current.Farm == true or current["Ghost Dog"] == true or current[bossMode] == true)
+			end
+			local function step()
+				for _, mode in ipairs({ "Farm", "Ghost Dog", bossMode }) do
+					local value = config()[mode] == true
+					if not value then
+						state.Blocked[mode] = nil
+					end
+					state.Modes[mode] = value
+				end
+				if not anyConfigured() then
+					restoreRaceInput()
+					clearQuestTracking()
+					state.HaltedReason = nil
+					return false
+				end
+				if state.HaltedReason then
+					status("Paused", state.HaltedReason)
+					return true
+				end
+				if not connected() then
+					controller.Stop()
+					return true
+				end
+				if not avatar() then
+					status("Idle", "Waiting for the character")
+					return true
+				end
+				local ragdollUntil = player:GetAttribute("RagdollEndTime")
+				if type(ragdollUntil) == "number" and ragdollUntil > world:GetServerTimeNow() then
+					status("Idle", "Waiting for ragdoll recovery")
+					return true
+				end
+				if player:GetAttribute("RaceId") ~= nil then
+					return race()
+				end
+				if player:GetAttribute("InPumpkinArena") == true then
+					return bossFight()
+				end
+				for _, mode in ipairs({ "Farm", "Ghost Dog", bossMode }) do
+					if enabled(mode) and player:GetAttribute("HalloweenCarrying") == true then
+						return recoverEgg(mode)
+					end
+				end
+				if hollowAvailable() then
+					return joinHollow()
+				end
+				if bossAvailable() then
+					return joinBoss()
+				end
+				if enabled("Ghost Dog") and ghostQuest() then
+					return true
+				end
+				if enabled("Farm") then
+					if context.BalanceFarm then
+						if now() < state.NextFarmVisit then
+							if inside() then
+								leaveDimension("Farm")
+								return true
+							end
+							return false
+						end
+						if not state.FarmVisitStarted then
+							state.FarmVisitStarted = now()
+							state.FarmVisitTrips = state.CompletedTrips
+						end
+						if now() - state.FarmVisitStarted >= 90 or state.CompletedTrips - state.FarmVisitTrips >= 2 then
+							if inside() and not leaveDimension("Farm") then
+								return true
+							end
+							state.FarmVisitStarted = nil
+							state.NextFarmVisit = now() + 60
+							return false
+						end
+					end
+					if inside() and claimMastery("Farm") then
+						return true
+					end
+					return farm()
+				end
+				if enabled(bossMode) and inside() and claimMastery(bossMode) then
+					return true
+				end
+				if inside() then
+					for _, mode in ipairs({ "Ghost Dog", bossMode }) do
+						if enabled(mode) then
+							leaveDimension(mode)
+							return true
+						end
+					end
+					status("Paused", "All enabled Halloween modes are paused")
+					return true
+				end
+				for mode, reason in pairs(state.Blocked) do
+					status(mode, "Paused: " .. reason)
+					return true
+				end
+				return false
+			end
+			function controller.Enabled()
+				return anyConfigured()
+			end
+			function controller.Step()
+				local ok, result = pcall(step)
+				if not ok then
+					restoreRaceInput()
+					clearQuestTracking()
+					local mode = state.Mode
+					if mode ~= "Farm" and mode ~= "Ghost Dog" and mode ~= bossMode then
+						mode = "Farm"
+					end
+					return pause(mode, result)
+				end
+				state.OwnsStep = result == true or state.HaltedReason ~= nil
+				return state.OwnsStep
+			end
+			function controller.Snapshot()
+				local save = context.GetSave() or {}
+				local quest = save.GhostDogQuest or {}
+				local dimension = save.HalloweenDimension or {}
+				local mastery = dimension.BossMastery or {}
+				local arena = world:FindFirstChild("PumpkinArena")
+				local currentMap = map()
+				local eggs = currentMap and currentMap:FindFirstChild("WorldEggs")
+				local eligibility = module("Shared/Util/HalloweenDimensionEligibility")
+				return {
+					Build = state.Build,
+					Active = state.Active,
+					Mode = state.Mode,
+					Task = state.Task,
+					Blocked = table.clone(state.Blocked),
+					HaltedReason = state.HaltedReason,
+					ModuleTimes = table.clone(state.ModuleTimes),
+					Config = {
+						Farm = config().Farm == true,
+						["Ghost Dog"] = config()["Ghost Dog"] == true,
+						[bossMode] = config()[bossMode] == true,
+					},
+					Inside = inside(),
+					Eligible = eligibility and eligibility.IsEligible(save.SpeedPower or 0) or false,
+					RequiredSpeed = eligibility and eligibility.RequiredSpeedPower() or nil,
+					Tokens = save.HalloweenTokens or 0,
+					SpeedPower = save.SpeedPower or 0,
+					QuestStage = quest.Stage or 0,
+					Mastery = mastery.Mastery or 0,
+					HollowWins = save.TheHollow and save.TheHollow.Wins or 0,
+					RaceId = player:GetAttribute("RaceId"),
+					BossPhase = arena and arena:GetAttribute("Phase"),
+					Carrying = player:GetAttribute("HalloweenCarrying") == true,
+					EggCount = eggs and #eggs:GetChildren() or 0,
+					CompletedTrips = state.CompletedTrips,
+					PurchasedEggs = state.PurchasedEggs,
+				}
+			end
+			function controller.Info(format)
+				local save = context.GetSave() or {}
+				local quest = save.GhostDogQuest or {}
+				local mastery = save.HalloweenDimension and save.HalloweenDimension.BossMastery or {}
+				return string.format(
+					"Halloween Tokens: %s\nSpeed: %s\nGhost Dog: %s / 4\nPumpkin Mastery: %s\nThe Hollow wins: %s\nEgg trips: %s\nEggs bought: %s",
+					format(save.HalloweenTokens or 0),
+					format(save.SpeedPower or 0),
+					tostring(quest.Stage or 0),
+					tostring(mastery.Mastery or 0),
+					tostring(save.TheHollow and save.TheHollow.Wins or 0),
+					tostring(state.CompletedTrips),
+					tostring(state.PurchasedEggs)
+				)
+			end
+			function controller.Stop()
+				if state.Navigation then
+					state.Navigation.Cancel()
+				end
+				if not state.Active then
+					return
+				end
+				state.Active = false
+				restoreRaceInput()
+				clearQuestTracking()
+				if state.OwnGhostCast and connected() then
+					local abort = remote("GhostDogQuest", "Abort")
+					if abort then
+						task.defer(function()
+							pcall(abort.InvokeServer, abort)
+						end)
+					end
+				end
+				state.OwnGhostCast = false
+			end
+			return controller
+		end
+		local previous = environment.__SkiderSaeHalloween
+		if type(previous) == "table" and previous.Game == game and type(previous.Stop) == "function" then previous.Stop() end
+		tbl21.Halloween = createHalloween({
+			Game = game,
+			Player = tbl17.LocalPlayer,
+			World = tbl17.Workspace,
+			Storage = tbl17.RS,
+			GetSave = tbl18.Save.Peek,
+			GetConfig = function()
+				local config = environment.Config
+				return type(config) == "table" and config.Halloween or stealAnEgg.Halloween
+			end,
+			SetMode = fn30,
+			SetTask = fn29,
+			BalanceFarm = true,
+			ImmediateReturn = true,
+			OnEggAcquired = function(uid) tbl21.FarmPlanner.RegisterEgg(uid) end,
+		})
+		environment.__SkiderSaeHalloween = tbl21.Halloween
 	end
 	do
 		warn("[StealAnEgg] Starting loop...")
@@ -4228,46 +6498,19 @@ Steal match:  %d (%d rules)]],
 	do
 		local function fn66()
 			while true do
+				if not game:GetService("NetworkClient"):FindFirstChildOfClass("ClientReplicator") then
+					if tbl21.Halloween then tbl21.Halloween.Stop() end
+					if tbl21.FarmPlanner then tbl21.FarmPlanner.Stop() end
+					break
+				end
 				local ok, failure = pcall(function()
-					local flag14 = #stealAnEgg.StealEggs > 0 and fn45()
-					local v75, v76 = fn43()
-
-					if flag14 and v75 then
-						fn30("Steal Mode")
-						fn29("Scanning steal targets...")
-						local v77, v78 = fn51()
-						warn("[StealEggs]", v77, v78)
-						fn65()
-					elseif #stealAnEgg.StealEggs > 0 and (not flag14 or not v75) then
-						if not v75 then
-							fn30("Farm Mode")
-							fn29(("Cycle soon: %s"):format(tostring(v76)))
-							warn("[StealEggs] skip:", v76)
-							warn("[AutoTM] cycle soon — farm until day change")
-						else
-							fn30("Farm Mode")
-							fn29("No matching eggs — farming...")
-							warn("[StealEggs] no matching eggs — farm until day change")
-						end
-
-						local v77, v78 = fn63()
-						warn("[AutoTM]", v77, v78)
-						local v79, v80 = fn64()
-						warn("[StealEggs][ASAP]", v79, v80)
-						fn65()
-					elseif tbl20.AutoTreadmill then
-						fn30("Farm Mode")
-						fn29("No StealEggs config — farming...")
-						warn("[AutoTM] no StealEggs config — farming until cycle")
-						local v77, v78 = fn63()
-						warn("[AutoTM]", v77, v78)
-						fn65()
-					else
-						fn30("Idle")
-						fn29("Waiting...")
-						fn65()
-						task.wait(tbl20.MainLoopWait)
+					if tbl21.FarmPausedReason then
+						fn30("Paused")
+						fn29(tbl21.FarmPausedReason)
+						return
 					end
+					if tbl21.Halloween and tbl21.Halloween.Enabled() and tbl21.Halloween.Step() then return end
+					tbl21.FarmPlanner.Step()
 				end)
 				if not ok then
 					stealAnEgg.ForceStealPosition = nil
