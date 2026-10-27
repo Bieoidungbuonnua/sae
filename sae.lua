@@ -3664,7 +3664,7 @@ return (function()
 						fn64()
 						return false, "Character is not alive"
 					end
-					if os.clock() >= trainDeadline or shouldStop and shouldStop() then break end
+					if os.clock() >= trainDeadline or shouldStop and shouldStop(os.clock() - trainStarted) then break end
 					local workspace_ = tbl17.Workspace
 					flag14 = false
 
@@ -3772,17 +3772,11 @@ return (function()
 				task.wait(0.1)
 			end
 			runStep("Equip best trail", "[Trail]", fn35)
-			runStep("Upgrade treadmill", "[Treadmill]", function() return fn37(1) end, true)
-			task.wait()
-			if not tbl21.CanUpgradeTreadmill or not tbl21.CanUpgradeTreadmill() then
-				runStep("Upgrade base", "[BaseUpgrade]", function() return fn36(1) end, true)
-			end
 			runStep("Sell pets", "[Sell]", fn39)
-			runStep("Hatch eggs", "[HatchEggs]", fn53)
-			runStep("Place eggs", "[PlaceEggs]", fn55)
+			if tbl21.PetManager then runStep("Equip productive pets", "[Pets]", function() return tbl21.PetManager.EquipBest(4) end) end
 			runStep("Claim index rewards", "[Index]", fn56)
 			runStep("Claim offline money", "[Offline]", fn57)
-			fn29("Idle")
+			fn29("Continuing speed training")
 		end
 
 		do
@@ -3896,6 +3890,107 @@ Steal match:  %d (%d rules)]],
 		end
 	end
 	do
+		local createPetManager = function(context)
+			local manager = {}
+			local function snapshot()
+				local save = context.GetSave()
+				local equipped, rows = {}, {}
+				for _, uid in ipairs(save.EquippedAssets or {}) do
+					equipped[uid] = true
+				end
+				local count, weakest, weakestIncome = #(save.EquippedAssets or {}), nil, math.huge
+				local scanned = 0
+				for uid, item in pairs(save.Inventory or {}) do
+					scanned += 1
+					if type(item) == "table" and not item.InFuse then
+						local profile = table.clone(save)
+						profile.EquippedAssets = { uid }
+						local ok, income = pcall(context.Income, profile)
+						if ok and type(income) == "number" and income == income and income >= 0 then
+							local row = { Uid = uid, Income = income, Equipped = equipped[uid] == true }
+							table.insert(rows, row)
+							if row.Equipped then
+								if income < weakestIncome then
+									weakest, weakestIncome = uid, income
+								end
+							end
+						end
+					end
+					if scanned % 16 == 0 and context.Yield then
+						context.Yield()
+					end
+				end
+				table.sort(rows, function(a, b)
+					if a.Income == b.Income then
+						return tostring(a.Uid) < tostring(b.Uid)
+					end
+					return a.Income > b.Income
+				end)
+				local capacity = math.max(tonumber(context.Capacity(save)) or count, count, 1)
+				local best
+				for _, row in ipairs(rows) do
+					if not row.Equipped and row.Income > 0 and (count < capacity or row.Income > weakestIncome) then
+						best = row
+						break
+					end
+				end
+				local ok, income = pcall(context.Income, save)
+				return {
+					Income = ok and tonumber(income) or 0,
+					PetCount = count,
+					PetCapacity = capacity,
+					OwnedPets = #rows,
+					WorstPetIncome = weakest and weakestIncome or 0,
+					WeakestUid = weakest,
+					BestUnequipped = best,
+					Money = tonumber(save.Money) or 0,
+				}
+			end
+			function manager.Snapshot()
+				return snapshot()
+			end
+			function manager.EquipBest(maxChanges)
+				local changed = 0
+				for _ = 1, math.clamp(tonumber(maxChanges) or 2, 1, 8) do
+					local current = snapshot()
+					local candidate = current.BestUnequipped
+					if not candidate then
+						return changed
+					end
+					local removed
+					if current.PetCount >= current.PetCapacity then
+						local ok, reason = context.Doff(current.WeakestUid)
+						if not ok then
+							return changed, reason
+						end
+						removed = current.WeakestUid
+						if not context.Confirm(removed, false) then
+							return changed, "Pet removal was not confirmed"
+						end
+					end
+					local ok, reason = context.Wear(candidate.Uid)
+					if not ok then
+						if removed then
+							context.Wear(removed)
+						end
+						return changed, reason
+					end
+					if not context.Confirm(candidate.Uid, true) then
+						local latest = snapshot()
+						if removed and latest.PetCount < latest.PetCapacity then
+							context.Wear(removed)
+						end
+						return changed, "Pet equipment was not confirmed"
+					end
+					changed += 1
+					if context.Yield then
+						context.Yield()
+					end
+				end
+				return changed
+			end
+			return manager
+		end
 		local createFarmPlanner = function(context)
 			local now = context.Clock or os.clock
 			local state: { [string]: any } = {
@@ -4095,22 +4190,65 @@ Steal match:  %d (%d rules)]],
 				return config()["Auto Place Eggs"] ~= false and state.ManagedEggs[uid] == true
 			end
 			local function maintain()
-				state.Action = "Upgrade, place eggs and hatch ready eggs"
-				if
-					context.LeaveTraining
+				state.Action = "Equipping productive pets and claiming available rewards"
+				context.Maintain()
+				state.NextMaintenance = now() + 30
+				return true
+			end
+			local function placeDue()
+				return now() >= state.NextPlace
 					and (
-						context.CanUpgradeTreadmill()
-						or planner.PendingCount() > 0
+						config()["Auto Place Eggs"] ~= false and planner.PendingCount() > 0
 						or context.HasReadyEggs and context.HasReadyEggs()
 					)
-				then
-					if not leaveTraining() then
-						return false
-					end
+			end
+			local function upgradeDue()
+				return now() >= state.NextUpgrade and context.CanUpgradeTreadmill()
+			end
+			local function serviceEggs()
+				local count, reason = context.PlaceAndHatch()
+				if count == 0 then
+					state.PlaceFailures = math.min((state.PlaceFailures or 0) + 1, 3)
+					state.LastFailure = reason or "Waiting for egg placement or hatch confirmation"
+					state.NextPlace = now() + 30 * 2 ^ (state.PlaceFailures - 1)
+				else
+					state.PlaceFailures = 0
+					state.NextPlace = now() + 10
 				end
-				context.Maintain()
-				state.NextMaintenance = now() + 15
-				return true
+			end
+			local function tripTarget(credit)
+				if
+					now() < (state.NextStealAttempt or 0)
+					or credit < budget("Min Train Seconds", 30, 0, 600)
+					or state.StealsSinceTrain >= math.floor(budget("Steal Batch Size", 2, 1, 5))
+					or planner.PendingCount() >= 2
+					or not context.CycleReady()
+				then
+					return nil
+				end
+				local economy = context.Economy and context.Economy()
+				if economy and (economy.GrowingCount or 0) >= budget("Max Growing Eggs", 2, 1, 10) then
+					return nil
+				end
+				state.SpeedGoal = nil
+				local target = planner.Choose(context.GetEggs())
+				if not target or not economy or not planner.Automatic() then
+					return target
+				end
+				local income = math.max(tonumber(context.Score(target)) or 0, 0)
+				local current = math.max(tonumber(economy.Income) or 0, 0)
+				local free = (economy.PetCount or 0) + (economy.GrowingCount or 0) < (economy.PetCapacity or 1)
+				local baseline = free and 0 or math.max(economy.WorstPetIncome or 0, economy.BestGrowingIncome or 0)
+				local gain = income - baseline
+				if gain <= 0 or gain < current * 0.02 then
+					return nil
+				end
+				local missing = math.max((economy.NextTreadmillCost or math.huge) - (economy.Money or 0), 0)
+				local fundedSoon = current > 0 and missing / current <= budget("Treadmill Funding Seconds", 300, 0, 3600)
+				if fundedSoon and gain < current * 0.1 then
+					return nil
+				end
+				return target
 			end
 			local function train()
 				if not characterReady() then
@@ -4118,44 +4256,22 @@ Steal match:  %d (%d rules)]],
 				end
 				local seconds = budget("Train Seconds", 20, 5, 60)
 				local started = now()
-				local minimumTrain = budget("Min Train Seconds", 0, 0, 600)
 				local nextCheck = started + 5
-				local function shouldStop()
+				local function shouldStop(elapsed)
 					if not state.Active or state.HaltedReason then
 						return true
 					end
 					if now() < nextCheck then
 						return false
 					end
-					nextCheck = now() + 2
-					if context.CanUpgradeTreadmill() then
-						return true
-					end
-					if state.TrainCredit + now() - started < minimumTrain then
-						return false
-					end
-					if now() < (state.NextStealAttempt or 0) then
-						return false
-					end
-					if now() - started >= 8 and context.CycleReady() and planner.Choose(context.GetEggs()) then
-						return true
-					end
-					return false
+					nextCheck = now() + 3
+					local trained = type(elapsed) == "number" and math.max(elapsed, 0) or now() - started
+					return upgradeDue()
+						or placeDue()
+						or trained >= 5 and tripTarget(state.TrainCredit + trained) ~= nil
 				end
 				local function keepTraining()
-					if not state.Active or state.HaltedReason or context.CanUpgradeTreadmill() then
-						return false
-					end
-					if planner.PendingCount() > 0 or context.HasReadyEggs and context.HasReadyEggs() then
-						return false
-					end
-					if now() < (state.NextStealAttempt or 0) then
-						return true
-					end
-					if state.TrainCredit + now() - started < minimumTrain then
-						return true
-					end
-					return not (context.CycleReady() and planner.Choose(context.GetEggs()))
+					return state.Active and not state.HaltedReason
 				end
 				state.Action = ("Training for up to %.0fs, then checking eggs and upgrades"):format(seconds)
 				local ok, reason, trained = context.Train(seconds, shouldStop, keepTraining)
@@ -4181,7 +4297,6 @@ Steal match:  %d (%d rules)]],
 					return halt(reason or "Treadmill training failed")
 				end
 				state.StealsSinceTrain = 0
-				state.NextUpgrade = 0
 				return true
 			end
 			local function step()
@@ -4217,8 +4332,8 @@ Steal match:  %d (%d rules)]],
 					if delivered then
 						state.StealsSinceTrain += 1
 						state.TrainCredit = 0
-						context.PlaceAndHatch()
-						state.NextPlace = now() + 10
+						state.NextStealAttempt = now() + budget("Egg Trip Cooldown", 60, 10, 600)
+						serviceEggs()
 					else
 						state.LastFailure = reason
 						state.NextTrainAttempt = now() + 2
@@ -4232,39 +4347,31 @@ Steal match:  %d (%d rules)]],
 					maintain()
 					return true
 				end
-				if now() >= state.NextUpgrade and context.CanUpgradeTreadmill() then
+				if upgradeDue() then
 					state.Action = "Upgrading the treadmill before the next train session"
 					if not leaveTraining() then
 						return true
 					end
 					local count, reason = context.UpgradeTreadmill()
-					if count == 0 then
-						return halt(reason or "Treadmill upgrade was not confirmed")
+					if type(count) ~= "number" or count < 1 then
+						state.LastFailure = reason or "Treadmill upgrade was not confirmed"
+						state.NextUpgrade = now() + 30
+						return train()
 					end
 					state.NextUpgrade = now() + 5
 					return true
 				end
 				local pending = planner.PendingCount()
-				if pending > 0 and now() >= state.NextPlace then
+				if placeDue() then
 					state.Action = "Placing stolen eggs and hatching ready eggs"
 					if not leaveTraining() then
 						return true
 					end
-					context.PlaceAndHatch()
-					state.NextPlace = now() + 10
+					serviceEggs()
 					return true
 				end
-				local batch = math.floor(budget("Steal Batch Size", 2, 1, 5))
-				if
-					pending < 2
-					and state.StealsSinceTrain < batch
-					and state.TrainCredit >= budget("Min Train Seconds", 0, 0, 600)
-					and now() >= (state.NextStealAttempt or 0)
-					and not context.CanUpgradeTreadmill()
-					and context.CycleReady()
-				then
-					state.SpeedGoal = nil
-					local target = planner.Choose(context.GetEggs())
+				if not upgradeDue() then
+					local target = tripTarget(state.TrainCredit)
 					if target then
 						state.Action = "Stealing " .. tostring(target.Name or target.AssetCategory)
 						if not leaveTraining() then
@@ -4290,6 +4397,9 @@ Steal match:  %d (%d rules)]],
 							return train()
 						end
 						if stolen == 0 and reason == "Stolen 0 eggs" then
+							state.FailedTargets[target.Uid] = now() + 45
+							state.NextStealAttempt = now() + 30
+							state.TrainCredit = 0
 							return train()
 						end
 						if
@@ -4316,10 +4426,9 @@ Steal match:  %d (%d rules)]],
 							return halt(reason or "The egg was not acquired")
 						end
 						state.StealsSinceTrain += stolen
+						state.NextStealAttempt = now() + budget("Egg Trip Cooldown", 60, 10, 600)
 						state.TrainCredit = 0
-						context.PlaceAndHatch()
-						state.NextPlace = now() + 10
-						state.NextMaintenance = math.min(state.NextMaintenance, now() + 5)
+						serviceEggs()
 						return true
 					end
 				end
@@ -4747,6 +4856,74 @@ Steal match:  %d (%d rules)]],
 			task.wait(0.3)
 			return true
 		end
+		task.wait()
+		tbl18.AssetRoster = require(tbl17.RS.Client.AssetRoster)
+		task.wait()
+		tbl18.Bases = require(tbl17.RS.Data.Bases)
+		tbl21.PetManager = createPetManager({
+			GetSave = function() return tbl18.Save.Peek() or {} end,
+			Income = function(profile) return tbl18.AssetItems.ProfileIncomePerSecond(tbl17.LocalPlayer, profile) end,
+			Capacity = function(save)
+				local base = tbl18.Bases.BASES[save.BaseUpgradeLevel or 0]
+				return base and base.MaxAssets or 5
+			end,
+			Wear = function(uid) return tbl18.AssetRoster.WearAsset(uid) end,
+			Doff = function(uid) return tbl18.AssetRoster.DoffAsset(uid) end,
+			Confirm = function(uid, expected)
+				return waitForSave(function(save)
+					local equipped = table.find(save.EquippedAssets or {}, uid) ~= nil
+					return equipped == expected
+				end)
+			end,
+			Yield = task.wait,
+		})
+		local eggIncomeStamp, eggIncomeCache = -math.huge, {}
+		local function expectedEggIncome(egg)
+			if os.clock() - eggIncomeStamp >= 3 then eggIncomeStamp, eggIncomeCache = os.clock(), {} end
+			local record = egg.Record or egg
+			local key = record.Uid
+			if key and eggIncomeCache[key] then return eggIncomeCache[key] end
+			local item = {
+				Category = record.AssetCategory,
+				Scale = record.AssetScale,
+				Mutations = record.Mutations or {},
+				BaseMutation = record.BaseMutation,
+				EyeColor = record.AssetEyeColor,
+				ColorIndex = record.AssetColorIndex,
+				ColorSeed = record.AssetColorSeed,
+				Personality = "Normal",
+				HasBeenFirstPlaced = true,
+				InFuse = false,
+			}
+			local profile = table.clone(tbl18.Save.Peek() or {})
+			profile.Inventory, profile.EquippedAssets = {candidate = item}, {"candidate"}
+			local ok, value = pcall(tbl18.AssetItems.ProfileIncomePerSecond, tbl17.LocalPlayer, profile)
+			if not ok or type(value) ~= "number" or value ~= value or value == math.huge then
+				local asset = fn27(tbl18.AssetsDir)[record.AssetCategory]
+				value = math.max(asset and tonumber(asset.EarningRate) or 0, 0) * math.max(tonumber(record.AssetScale) or 1, 0.01)
+			end
+			if key then eggIncomeCache[key] = value end
+			return value
+		end
+		local economyStamp, economyCache = -math.huge, nil
+		local function economy()
+			if economyCache and os.clock() - economyStamp < 3 then return economyCache end
+			local value = tbl21.PetManager.Snapshot()
+			local save = tbl18.Save.Peek() or {}
+			local tier = tbl21.sortedTreadmills[(save.TreadmillUpgradeLevel or 0) + 1]
+			value.NextTreadmillCost = tier and tier.Price or math.huge
+			value.GrowingCount, value.BestGrowingIncome = 0, 0
+			for _, record in pairs(tbl18.EggCmds.GetOwnerRuntimeRecords(tbl17.LocalPlayer.UserId) or {}) do
+				if record.Placement then
+					value.GrowingCount += 1
+					local item = record.ItemData or record
+					local asset = fn27(tbl18.AssetsDir)[item.AssetCategory or item.Category]
+					value.BestGrowingIncome = math.max(value.BestGrowingIncome, asset and (tonumber(asset.EarningRate) or 0) * (tonumber(item.AssetScale or item.Scale) or 1) or 0)
+				end
+			end
+			economyStamp, economyCache = os.clock(), value
+			return value
+		end
 		tbl21.FarmPlanner = createFarmPlanner({
 			Game = game,
 			ManagedEggs = managed,
@@ -4765,13 +4942,10 @@ Steal match:  %d (%d rules)]],
 				local asset = fn27(tbl18.AssetsDir)[egg.AssetCategory]
 				return asset and tonumber(asset.EarningRate) or nil
 			end,
-			Score = function(egg)
-				local asset = fn27(tbl18.AssetsDir)[egg.AssetCategory]
-				local rate = asset and tonumber(asset.EarningRate) or 0
-				return math.max(rate, 0) * math.max(tonumber(egg.AssetScale) or 1, 0.01)
-			end,
+			Score = expectedEggIncome,
+			Economy = economy,
 			CanUpgradeTreadmill = canUpgrade,
-			UpgradeTreadmill = function() return fn37(1) end,
+			UpgradeTreadmill = function() return fn37(3) end,
 			CycleReady = fn43,
 			Maintain = fn65,
 			PlaceAndHatch = function()
@@ -4779,11 +4953,14 @@ Steal match:  %d (%d rules)]],
 					local ok, reason = tbl21.LeaveTraining()
 					if not ok then return 0, reason end
 				end
-				fn53()
+				local hatched = fn53()
 				task.wait()
-				fn55()
+				local placed, reason = fn55()
 				task.wait()
-				fn53()
+				hatched += fn53()
+				tbl21.PetManager.EquipBest(4)
+				economyCache = nil
+				return hatched + placed, reason
 			end,
 			LeaveTraining = function() if tbl21.IsTraining() then return tbl21.LeaveTraining() end return true end,
 			HasReadyEggs = function()
