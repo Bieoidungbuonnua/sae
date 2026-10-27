@@ -70,358 +70,17 @@ return (function()
 
 			do
 				do
-					local tbl22, v75, fn48, fn49, fn50
-
-					do
-						do
-							local fn51, v76, v77, flag14, flag15
-
-							do
-								do
-								end
-
-								do
-									repeat
-										task.wait()
-									until game:IsLoaded()
-
-									tbl17 = {}
-									tbl18 = {}
-									tbl19 = {}
-									tbl20 = {}
-									tbl21 = {}
-									task.wait(2)
-									tbl17.RS = game:GetService("ReplicatedStorage")
-									tbl17.Net = tbl17.RS:WaitForChild("Packages"):WaitForChild("Networking")
-
-									tbl22 = { bacInstalled = false, perFrameHooked = false, secureHook = hookfunction }
-								end
-
-								v75 = newcclosure
-							end
-						end
-
-						do
-							local function fn51(arg, arg2)
-								if not arg or not arg2 or not arg2.Parent then
-									return
-								end
-								local v76 = "StealAnEgg"
-								local cFrame = rawget(environment, v76)
-								cFrame = cFrame and cFrame.ForceStealPosition
-
-								if typeof(cFrame) == "Vector3" then
-									cFrame = CFrame.new(cFrame)
-								elseif typeof(cFrame) ~= "CFrame" then
-									cFrame = arg2.CFrame
-								end
-
-								arg.Position = cFrame.Position
-								arg.CFrame = cFrame
-								arg.LinearVelocity = Vector3.zero
-								arg.AngularVelocity = Vector3.zero
-								arg.IsSupported = true
-								arg.Timestamp = workspace:GetServerTimeNow()
-							end
-
-							fn49 = function(arg)
-								if not arg then
-									do
-										return
-									end
-								end
-
-								local rootPart = arg.RootPart
-
-								if not (not rootPart or not rootPart.Parent) then
-									if arg.Evidence then
-										arg.Evidence.Speed = 0
-										arg.Evidence.Flight = 0
-										arg.Evidence.Teleport = 0
-									end
-
-									arg.TamperScore = 0
-									arg.ThreatLevel = "Trusted"
-									arg.KickQueued = false
-									arg.InvalidHeartbeatCount = 0
-									arg.CoreGuiScore = 0
-									return
-								end
-
-								do
-									return
-								end
-							end
-
-							fn50 = function(arg)
-								if not arg then
-									return
-								end
-								local rootPart = arg.RootPart
-								if not rootPart or not rootPart.Parent then
-									return
-								end
-								fn51(arg.LastSample, rootPart)
-								fn51(arg.LastGoodSample, rootPart)
-								fn51(arg.LastValidatedSample, rootPart)
-								fn51(arg.LastValidatedGroundedSample, rootPart)
-								fn51(arg.LastGameplayTrustedSample, rootPart)
-								fn51(arg.LastConfirmedGroundSample, rootPart)
-								fn51(arg.LastObservedSample, rootPart)
-								fn51(arg.CandidateGroundedSample, rootPart)
-
-								if arg.SampleHistory then
-									for _, v76 in pairs(arg.SampleHistory) do
-										fn51(v76, rootPart)
-									end
-								end
-
-								if arg.SafeGroundCheckpoints then
-									for _, safeGroundCheckpoint in pairs(arg.SafeGroundCheckpoints) do
-										fn51(safeGroundCheckpoint, rootPart)
-									end
-								end
-
-								if arg.HorizontalDebug then
-									for _, v76 in pairs(arg.HorizontalDebug) do
-										if type(v76) == "table" then
-											v76.HorizontalExcess = 0
-											v76.NetHorizontalDisplacement = 0
-											v76.AdjustedPathDistance = 0
-											v76.NetMovementRatio = 0
-											v76.PathMovementRatio = 0
-										end
-									end
-								end
-
-								if arg.LastVerticalSegmentDecision then
-									arg.LastVerticalSegmentDecision.Excess = 0
-									arg.LastVerticalSegmentDecision.Displacement = 0
-									arg.LastVerticalSegmentDecision.Ratio = 0
-									arg.LastVerticalSegmentDecision.CorrectionStarted = false
-									arg.LastVerticalSegmentDecision.Decision = "Reachable"
-								end
-
-								if arg.LastVerticalTrajectoryDecision then
-									arg.LastVerticalTrajectoryDecision.Active = false
-									arg.LastVerticalTrajectoryDecision.Evidence = 0
-									arg.LastVerticalTrajectoryDecision.CorrectionStarted = false
-									arg.LastVerticalTrajectoryDecision.ConsecutiveInvalidWindows = 0
-								end
-
-								do
-									arg.IsSupportedNow = true
-									arg.MovementMode = "Grounded"
-									arg.HighestYSinceGround = rootPart.CFrame.Position.Y
-									return
-								end
-							end
-						end
-					end
-
-					do
-						local fn51
-
-						do
-							local fn52, fn53
-
-							do
-								fn52 = function(arg)
-									tbl22.perFrameOld = tbl22.secureHook(arg, function(...)
-										local v76 = table.pack(...)
-										local v77 = ({ ... })[1]
-										local value = rawget(environment, "StealAnEgg")
-										value = value and value.ForceStealPosition
-
-										if v77 and typeof(value) == "Vector3" then
-											local rootPart = v77.RootPart
-
-											if rootPart and rootPart.Parent then
-												rootPart.CFrame = CFrame.new(value)
-												rootPart.AssemblyLinearVelocity = Vector3.zero
-												rootPart.AssemblyAngularVelocity = Vector3.zero
-											end
-										end
-
-										fn50(v77)
-										local tbl23 = { tbl22.perFrameOld(table.unpack(v76, 1, v76.n)) }
-										fn49(v77)
-
-										if v77 and typeof(value) == "Vector3" then
-											local rootPart = v77.RootPart
-
-											if rootPart and rootPart.Parent then
-												rootPart.CFrame = CFrame.new(value)
-											end
-
-											if v77.Evidence then
-												v77.Evidence.Teleport = 0
-												v77.Evidence.Speed = 0
-												v77.Evidence.Flight = 0
-											end
-										end
-
-										return unpack(tbl23)
-									end)
-								end
-
-								do
-									local function fn54(arg, arg2)
-										local tbl23 = {}
-
-										for i = 1, #arg do
-											local v76 = string.byte(arg, i)
-											local char2 = string.char
-											local bxor = bit32.bxor
-											local v77 = string.byte(arg2, (i - 1) % #arg2 + 1)
-											tbl23[i] = char2(bxor(v76, v77))
-										end
-
-										return table.concat(tbl23)
-									end
-
-									fn53 = function()
-										local jobId = game.JobId
-
-										tbl22.bypassFireServerOld = tbl22.secureHook(
-											Instance.new("RemoteEvent").FireServer,
-											v75(function(arg)
-												local v76 = fn54("X-" .. tostring(os.time()), jobId)
-												local v77 = nil
-
-												if math.random(1, 2) == 2 then
-													local n31 = math.random(1, 999999)
-													v77 = fn54(tostring(n31), jobId)
-												end
-
-												return tbl22.bypassFireServerOld(arg, v76, v77)
-											end)
-										)
-
-										tbl22.bacInstalled = true
-									end
-								end
-							end
-
-							do
-								local tbl23 = {
-									"Trusted",
-									"MovementMode",
-									"LastVerticalSegmentDecision",
-									"Anti-cheat rejected a non-finite character movement sample",
-									"Anti-cheat correction lifecycle trace",
-									"POST_CORRECTION_HANDOFF_SAMPLE",
-								}
-
-								local function fn54(arg, arg2)
-									local ok, result = pcall(getconstants, arg)
-									if not ok or typeof(result) ~= "table" then
-										return false
-									end
-									local tbl24 = {}
-
-									for _, v76 in pairs(result) do
-										if typeof(v76) == "string" then
-											tbl24[v76] = true
-										end
-									end
-
-									for _, v76 in ipairs(arg2) do
-										if not tbl24[v76] then
-											return false
-										end
-									end
-
-									return true
-								end
-
-								fn51 = function()
-									if tbl22.perFrameHooked then
-										return true
-									end
-									local flag14 = typeof(getgc) ~= "function"
-
-									if not flag14 then
-										local v76 = "function"
-										flag14 = typeof(islclosure) ~= v76
-									end
-
-									if flag14 then
-										return false
-									end
-
-									for _, v76 in
-										ipairs(filtergc("function", { Constants = tbl23, IgnoreExecutor = true }))
-									do
-										if typeof(v76) == "function" and islclosure(v76) then
-											if fn54(v76, tbl23) then
-												local ok, result = pcall(getinfo, v76)
-
-												if
-													ok
-													and result
-													and result.source
-														== "=ReplicatedFirst.UGI.ContentCatalog.Playback"
-												then
-													fn52(v76)
-													tbl22.perFrameHooked = true
-													return true
-												end
-											end
-										end
-									end
-
-									return false
-								end
-							end
-
-							fn53()
-						end
-
-						fn51()
-
-						tbl22.bypassOld1 = hookmetamethod(
-							game,
-							"__namecall",
-							v75(function(arg, ...)
-								local v76 = table.pack(...)
-								local v77 = getnamecallmethod()
-
-								if not checkcaller() and (v77 == "FireServer" or v77 == "InvokeServer") then
-									local name = arg.Name
-
-									if name == "RE/Telemetry/SubmitIdleState" and v77 == "FireServer" then
-										if select(1, ...) == true then
-											return
-										end
-										return tbl22.bypassOld1(arg, table.unpack(v76, 1, v76.n))
-									end
-
-									if
-										v77 == "InvokeServer"
-										and (
-											name == "RF/Telemetry/AskIdleHopFlush"
-											or name == "RF/Telemetry/SubmitIdleHop"
-										)
-									then
-										return
-									end
-								end
-
-								return tbl22.bypassOld1(arg, ...)
-							end)
-						)
-
-						local n31 = os.clock() + 60
-
-						while not (tbl22.bacInstalled and tbl22.perFrameHooked) do
-							if os.clock() >= n31 then
-								error("Movement hook was not found within 60 seconds")
-							end
-							task.wait(2)
-							fn51()
-						end
-					end
+					repeat
+						task.wait()
+					until game:IsLoaded()
+					tbl17 = {}
+					tbl18 = {}
+					tbl19 = {}
+					tbl20 = {}
+					tbl21 = {}
+					task.wait(2)
+					tbl17.RS = game:GetService("ReplicatedStorage")
+					tbl17.Net = tbl17.RS:WaitForChild("Packages"):WaitForChild("Networking")
 
 					do
 						print("done")
@@ -703,9 +362,8 @@ return (function()
 							tbl18.EggCmds = {
 								RequestAreaEggSnapshot = function()
 									pcall(function()
-										if tbl18.EggState.SyncFieldEggs then
-											tbl18.EggState.SyncFieldEggs()
-										end
+										local ready = type(tbl18.EggState.HasFieldSnapshot) == "function" and tbl18.EggState.HasFieldSnapshot()
+										if not ready and tbl18.EggState.SyncFieldEggs then tbl18.EggState.SyncFieldEggs() end
 									end)
 
 									if typeof(tbl18.EggState.ReadFieldEggs) == "function" then
@@ -1941,12 +1599,11 @@ return (function()
 				end
 
 				local function fn47(arg)
-					if typeof(arg.BottomCFrame) == "CFrame" then
-						return arg.BottomCFrame.Position
-					end
-
 					if typeof(arg.BoundsCFrame) == "CFrame" then
 						return arg.BoundsCFrame.Position
+					end
+					if typeof(arg.BottomCFrame) == "CFrame" then
+						return arg.BottomCFrame.Position
 					end
 					return nil
 				end
@@ -2032,6 +1689,10 @@ return (function()
 		end
 
 		fn43 = function()
+			local world = tbl17.Workspace:FindFirstChild("World")
+			local areas = world and world:FindFirstChild("Areas")
+			local barrier = areas and areas:FindFirstChild("WallStartCollision")
+			if barrier and barrier:IsA("BasePart") and barrier.CanCollide then return false, "Egg reset barrier is closed" end
 			local v75, v76 = fn42()
 			if v75 == nil then
 				warn("[StealEggs] could not resolve cycle time left")
@@ -2314,122 +1975,15 @@ return (function()
 								return character:FindFirstChildWhichIsA("Humanoid")
 							end
 
-							fn48 = function(arg)
-								if not arg then
-									return
-								end
 
-								pcall(function()
-									arg.AssemblyLinearVelocity = Vector3.zero
 
-									arg.AssemblyAngularVelocity = Vector3.zero
-								end)
-							end
 
-							fn49 = function(platformStand)
-								local v75 = fn47()
-								local v76 = fn61()
 
-								if v75 then
-									v75.Anchored = false
-									fn48(v75)
-								end
 
-								if v76 then
-									pcall(function()
-										v76.PlatformStand = platformStand
 
-										if platformStand then
-											v76:ChangeState(Enum.HumanoidStateType.Physics)
-										else
-											do
-												v76:ChangeState(Enum.HumanoidStateType.Running)
-											end
-										end
-									end)
-								end
-							end
 
-							fn50 = function(forceStealPosition)
-								local v75 = fn47()
-								if not v75 then
-									return false, "No HumanoidRootPart"
-								end
-								v75.Anchored = false
-								fn48(v75)
-								local position = v75.Position
-								local n31 = math.max(
-									(position - forceStealPosition).Magnitude / math.max(tbl20.StealFlySpeed, 1),
-									0.05
-								)
-								local now2 = os.clock()
 
-								while true do
-									local v76 = fn47()
-									if not v76 or not v76.Parent then
-										return false, "Root lost during tween"
-									end
-									local n32 = math.min((os.clock() - now2) / n31, 1)
-									local v77 = position:Lerp(forceStealPosition, n32)
-									v76.CFrame = CFrame.new(v77)
-									fn48(v76)
-									stealAnEgg.ForceStealPosition = v77
-									if n32 >= 1 then
-										break
-									end
-									task.wait()
-								end
 
-								local v76 = fn47()
-
-								if v76 then
-									v76.CFrame = CFrame.new(forceStealPosition)
-									fn48(v76)
-									stealAnEgg.ForceStealPosition = forceStealPosition
-								end
-
-								return true
-							end
-
-							fn59 = function(forceStealPosition, arg)
-								local n31 = os.clock() + arg
-
-								while os.clock() < n31 do
-									local v75 = fn47()
-
-									if v75 then
-										v75.Anchored = false
-										v75.CFrame = CFrame.new(forceStealPosition)
-										fn48(v75)
-									end
-
-									stealAnEgg.ForceStealPosition = forceStealPosition
-									task.wait()
-								end
-							end
-
-							fn60 = function()
-								local v75 = fn61()
-
-								if v75 then
-									pcall(function()
-										v75.PlatformStand = false
-										v75.Sit = false
-
-										if v75.Health <= 0 then
-											v75.Health = v75.MaxHealth
-										end
-
-										v75:ChangeState(Enum.HumanoidStateType.Running)
-									end)
-
-									return v75.Health > 0
-								end
-
-								do
-									return false
-								end
-							end
 						end
 					end
 
@@ -2470,30 +2024,13 @@ return (function()
 							return tbl19.RequestAreaEggCarry:InvokeServer(tbl22)
 						end
 
-						fn58 = function(arg, arg2)
-							for i = 1, 3 do
-								fn60()
-								fn59(arg2, tbl20.StealReplicateWait + (i - 1) * 0.5)
-								local v75 = fn47()
-								fn56("pre-carry", i, v75 and v75.Position, "force", stealAnEgg.ForceStealPosition)
-								local v76, v77 = fn61(arg)
-								fn56("carry result", i, v76, v77, "pos now", fn47() and fn47().Position)
-								if v76 then
-									return true
-								end
-								local str7 = tostring(v77 or "")
-								if
-									str7:find("far", 1, true)
-									or str7:find("distance", 1, true)
-									or str7:find("closer", 1, true)
-								then
-									task.wait(0.35)
-									continue
-								end
-								return false, v77
-							end
-
-							return false, "Carry failed after retries"
+						fn58 = function(arg)
+							local root = fn47()
+							local character = tbl17.LocalPlayer.Character
+							local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+							if not root or not humanoid or humanoid.Health <= 0 then return false, "Character is not alive" end
+							if not arg.Position or (root.Position - arg.Position).Magnitude > 8 then return false, "Egg route: pickup is out of range" end
+							return fn61(arg)
 						end
 					end
 				end
@@ -2504,148 +2041,267 @@ return (function()
 					return fn38(arg)
 				end
 
-				local function fn60(arg)
-					if not arg.Position then
-						return false, "Egg position is missing"
+				local createEggWalker = function(context)
+					local now = context.Clock or os.clock
+					local state: { [string]: any } = { Active = true, Busy = false, Pending = nil }
+					local runner = { State = state }
+					local function status(message)
+						if context.Status then
+							context.Status(message)
+						end
 					end
-					fn29(("Stealing: %s (%.1f kg)"):format(arg.Name, arg.WeightKg or 0))
-					local v75, v76 = fn43()
-					fn56("cycle check", v75, v76)
-					if not v75 then
-						return false, v76
+					local function routeReason(reason)
+						return "Egg route: " .. tostring(reason or "destination unavailable")
 					end
-					local v77 = fn47()
-					if not v77 then
-						return false, "No HumanoidRootPart"
-					end
-					local previousEggs = {}
-					local snapshot = tbl18.Save.Peek()
-					for uid in pairs(snapshot and snapshot.EggInventory or {}) do
-						previousEggs[uid] = true
-					end
-					local stealReturnPosition = tbl20.StealReturnPosition
-					local position = arg.Position
-					local stealHeightOffset = tbl20.StealHeightOffset
-					local n31 = position + Vector3.new(0, tbl20.StealLandOffset, 0)
-					local n32 = v77.Position + Vector3.new(0, stealHeightOffset, 0)
-					local n33 = position + Vector3.new(0, stealHeightOffset, 0)
-					fn56("target", arg.Name, arg.Uid, "area", arg.AreaId, "nest", arg.NestId)
-					fn56("weight", arg.WeightKg, "eggPos", position, "landPos", n31)
-					fn56("from", v77.Position, "return", stealReturnPosition)
-					local n34 = v77.Position + Vector3.new(0, stealHeightOffset, 0)
-					local n35 = stealReturnPosition + Vector3.new(0, stealHeightOffset, 0)
-					fn49(true)
-					fn56("flight ON (no anchor, PlatformStand)")
-
-					local function fn61(arg2)
-						stealAnEgg.ForceStealPosition = nil
-						fn49(false)
-						return false, arg2
-					end
-
-					local v78, v79 = fn50(n34)
-					fn56("tween highHere", v78, v79, fn47() and fn47().Position)
-					if not v78 then
-						local v80, v81 = fn61(v79)
-						return v80, v81
-					end
-					local v80, v81 = fn50(n35)
-					fn56("tween highReturn", v80, v81, fn47() and fn47().Position)
-					if not v80 then
-						local v82, v83 = fn61(v81)
-						return v82, v83
-					end
-					local v82, v83 = fn50(stealReturnPosition)
-					fn56("tween returnPos (pre)", v82, v83, fn47() and fn47().Position)
-
-					if v82 then
-						local v84, v85 = fn50(n35)
-						fn56("tween highReturn2", v84, v85, fn47() and fn47().Position)
-						if not v84 then
-							local v86, v87 = fn61(v85)
-							return v86, v87
+					local function resume()
+						local pending = state.Pending
+						if not pending then
+							return false, "Egg route: no delivery pending"
 						end
-						local v86, v87 = fn50(n33)
-						fn56("tween highEgg", v86, v87, fn47() and fn47().Position)
-						if not v86 then
-							local v88, v89 = fn61(v87)
-							return v88, v89
+						if context.GetCharacter() ~= pending.Character then
+							state.Pending = nil
+							return false, "Character changed during egg route"
 						end
-						local v88, v89 = fn50(n31)
-						fn56("tween landPos", v88, v89, fn47() and fn47().Position)
-						if not v88 then
-							local v90, v91 = fn61(v89)
-							return v90, v91
-						end
-						fn49(false)
-						local v90, v91 = fn58(arg, n31)
-						if not v90 then
-							return false, v91 or "Carry failed"
-						end
-						fn49(true)
-						local v92 = fn47()
-						if not v92 then
-							fn49(false)
-							return false, "Failed to return"
-						end
-						local position2 = v92.Position
-						local n36 = position2.Y + stealHeightOffset
-						local vector =
-							Vector3.new(stealReturnPosition.X - position2.X, 0, stealReturnPosition.Z - position2.Z)
-						local magnitude = vector.Magnitude
-						local unit = magnitude > 0.001 and vector.Unit or Vector3.new(0, 0, -1)
-						local n37 = math.min(tbl20.StealClimbHoriz, math.max(magnitude * 0.2, 20))
-
-						if magnitude < n37 then
-							n37 = magnitude
-						end
-
-						local vector2 = Vector3.new(position2.X + unit.X * n37, n36, position2.Z + unit.Z * n37)
-						local vector3 = Vector3.new(stealReturnPosition.X, n36, stealReturnPosition.Z)
-						fn56("return climb", vector2, "cruise", vector3, "from", position2, "distance", magnitude)
-						local v93, v94 = fn50(vector2)
-						fn56("tween climbPos", v93, v94, fn47() and fn47().Position)
-						if not v93 then
-							fn49(false)
-							return false, v94
-						end
-
-						if (vector2 - vector3).Magnitude > 1 then
-							local v95, v96 = fn50(vector3)
-							fn56("tween cruisePos", v95, v96, fn47() and fn47().Position)
-							if not v95 then
-								fn49(false)
-								return false, v96
-							end
-						end
-
-						local v95, v96 = fn50(stealReturnPosition)
-						fn56("tween returnPos", v95, v96, fn47() and fn47().Position)
-						if not v95 then
-							fn49(false)
-							return false, v96
-						end
-						fn49(false)
-						fn56("carried", arg.Uid)
-						local grantedUid
-						if
-							not waitForSave(function(current)
-								grantedUid = findGrantedEgg(current, arg, previousEggs)
-								return grantedUid ~= nil
-							end)
-						then
+						if now() >= pending.Expires then
+							state.Pending = nil
 							return false, "Carried egg was not confirmed in inventory"
 						end
-						local v97, v98 = fn59(grantedUid)
-						fn56("equip result", v97, v98)
-						if tbl21.FarmPlanner then tbl21.FarmPlanner.RegisterEgg(grantedUid) end
-						return true, arg.Name
+						local uid
+						local nextProbe = 0
+						local carryEnded = false
+						local function delivered()
+							if context.FindGranted and now() >= nextProbe then
+								nextProbe = now() + 0.2
+								uid = context.FindGranted(pending.Egg, pending.Before)
+							end
+							if not uid and context.IsCarrying then
+								local carrying = context.IsCarrying()
+								if carrying == true then
+									pending.SawCarrying = true
+								elseif carrying == false and (pending.SawCarrying or now() - pending.Started >= 2) then
+									carryEnded = true
+								end
+							end
+							return uid ~= nil or carryEnded
+						end
+						status("Walking home with " .. tostring(pending.Egg.Name or "egg"))
+						if not delivered() then
+							local arrived, reason = context.Walk(pending.Home, 6, math.min(45, pending.Expires - now()), delivered)
+							if not arrived and not delivered() then
+								return false, routeReason(reason)
+							end
+						end
+						if not state.Active then
+							return false, "Egg route: Cancelled"
+						end
+						uid = uid or context.Confirm(pending.Egg, pending.Before)
+						if not uid then
+							pending.ConfirmAttempts += 1
+							if carryEnded or pending.ConfirmAttempts >= 3 then
+								state.Pending = nil
+							end
+							return false, "Carried egg was not confirmed in inventory"
+						end
+						state.Pending = nil
+						context.Register(uid)
+						if context.Equip then
+							context.Equip(uid)
+						end
+						return true, pending.Egg.Name
 					end
+					local function approachPosition(egg)
+						return context.ApproachPosition and context.ApproachPosition(egg) or egg.Position
+					end
+					local function run(egg)
+						if state.Pending then
+							return resume()
+						end
+						local character = context.GetCharacter()
+						if not character then
+							return false, "Character is not alive"
+						end
+						if not egg or not egg.Position then
+							return false, "Egg route: target position unavailable"
+						end
+						local home = context.GetHome()
+						if not home then
+							return false, "Egg route: waiting for own plot"
+						end
+						local allowed, reason = context.CycleReady()
+						if not allowed then
+							return false, routeReason(reason)
+						end
+						local previous = {}
+						for uid in pairs(context.GetSave().EggInventory or {}) do
+							previous[uid] = true
+						end
+						status("Walking to " .. tostring(egg.Name or "egg"))
+						local arrived
+						arrived, reason = context.Walk(approachPosition(egg), 2.5, 45)
+						if not arrived then
+							return false, routeReason(reason)
+						end
+						if not state.Active then
+							return false, "Egg route: Cancelled"
+						end
+						if context.GetCharacter() ~= character then
+							return false, "Character changed during egg route"
+						end
+						allowed, reason = context.CycleReady()
+						if not allowed then
+							return false, routeReason(reason)
+						end
+						local target = context.FindEgg(egg.Uid)
+						if not target or not target.Position then
+							return false, "Egg route: target no longer available"
+						end
+						arrived, reason = context.Walk(approachPosition(target), 2.5, 10)
+						if not arrived then
+							return false, routeReason(reason)
+						end
+						if not state.Active then
+							return false, "Egg route: Cancelled"
+						end
+						if context.GetCharacter() ~= character then
+							return false, "Character changed during egg route"
+						end
+						if context.Settle then context.Settle(target) end
+						if context.CanPickup then
+							local allowed, blockedReason = context.CanPickup(target)
+							if not allowed then return false, blockedReason or "Egg route: pickup is no longer eligible" end
+						end
+						local carried
+						for attempt = 1, 2 do
+							if context.GetCharacter() ~= character then return false, "Character changed during egg route" end
+							carried, reason = context.Carry(target)
+							if carried then break end
+							local message = type(reason) == "string" and string.lower(reason) or ""
+							local needsCloser = message:find("closer", 1, true) or message:find("distance", 1, true) or message:find("too far", 1, true)
+							if not needsCloser or attempt == 2 then return false, needsCloser and routeReason(reason) or reason or "Carry failed" end
+							arrived, reason = context.Walk(approachPosition(target), 1.5, 8)
+							if not arrived then return false, routeReason(reason) end
+							if context.Settle then context.Settle(target) end
+							if context.CanPickup then
+								local allowed, blockedReason = context.CanPickup(target)
+								if not allowed then return false, blockedReason or "Egg route: pickup is no longer eligible" end
+							end
+						end
+						state.Pending = {
+							Egg = target,
+							Before = previous,
+							Home = home,
+							Character = character,
+							Started = now(),
+							SawCarrying = false,
+							Expires = now() + 90,
+							ConfirmAttempts = 0,
+						}
+						return resume()
+					end
+					local function invoke(callback, ...)
+						if not state.Active then
+							return false, "Egg route: Cancelled"
+						end
+						if state.Busy then
+							return false, "Egg route: already active"
+						end
+						state.Busy = true
+						local ok, result, reason = pcall(callback, ...)
+						state.Busy = false
+						if not ok then
+							return false, routeReason(result)
+						end
+						return result, reason
+					end
+					function runner.Run(egg)
+						return invoke(run, egg)
+					end
+					function runner.Resume()
+						return invoke(resume)
+					end
+					function runner.Stop()
+						state.Active = false
+						if context.CancelWalk then
+							context.CancelWalk()
+						end
+					end
+					return runner
+				end
+				local function fn60(arg)
+					if not tbl21.EggWalker then
+						tbl21.EggWalker = createEggWalker({
+							GetCharacter = function()
+								if tbl21.CharacterReady() then return tbl17.LocalPlayer.Character end
+								return nil
+							end,
+							GetHome = function()
+								if not tbl21.NativePlotState then tbl21.NativePlotState = require(tbl17.RS.Client.PlotState) end
+								local slot = tbl21.NativePlotState.ResolveLocalSlot()
+								local plots = tbl17.Workspace:FindFirstChild("Plots")
+								local plot = slot and plots and plots:FindFirstChild(tostring(slot))
+								local center = plot and plot:FindFirstChild("CenterPoint")
+								return center and center:IsA("BasePart") and center.Position + Vector3.new(0,3,0) or nil
+							end,
+							ApproachPosition = function(egg)
+								local root = fn47()
+								local bottom = egg.Record and egg.Record.BottomCFrame
+								local y = typeof(bottom) == "CFrame" and bottom.Position.Y or egg.Position.Y
+								local delta = root and Vector3.new(root.Position.X-egg.Position.X,0,root.Position.Z-egg.Position.Z) or Vector3.new(-1,0,0)
+								local offset = delta.Magnitude > 0.1 and delta.Unit * 3.5 or Vector3.new(-3.5,0,0)
+								return Vector3.new(egg.Position.X,y+3,egg.Position.Z) + offset
+							end,
+							Walk = function(...) return tbl21.WalkEggRoute(...) end,
+							CycleReady = fn43,
+							GetSave = function() return tbl18.Save.Peek() or {} end,
+							FindEgg = function(uid)
+								for index, egg in ipairs(fn41()) do
+									if index % 16 == 0 then task.wait() end
+									if egg.Uid == uid then return egg end
+								end
+								return nil
+							end,
+							CanPickup = function(egg)
+								return tbl21.FarmPlanner.Accessible(egg), "Egg route: speed requirement changed"
+							end,
+							Settle = function(egg)
+								local character = tbl17.LocalPlayer.Character
+								local root = fn47()
+								local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+								if not root or not humanoid or humanoid.Health <= 0 then return end
+								local delta = egg.Position - root.Position
+								if delta.Magnitude > 7 and delta.Y > 2 and Vector3.new(delta.X,0,delta.Z).Magnitude <= 7.5 then
+									humanoid.Jump = true
+									local deadline = os.clock() + 1
+									repeat task.wait(0.05) until not root.Parent or (root.Position-egg.Position).Magnitude <= 7 or os.clock() >= deadline
+								else
+									task.wait(0.2)
+								end
+							end,
+							Carry = fn58,
+							IsCarrying = function()
+								if type(tbl18.EggState.ReadCarryState) ~= "function" then return nil end
+								local carry = tbl18.EggState.ReadCarryState()
+								return carry and carry.IsCarrying == true
+							end,
 
-					do
-						local v84, v85 = fn61(v83)
-						return v84, v85
+							FindGranted = function(egg, previous)
+								return findGrantedEgg(tbl18.Save.Peek() or {}, egg, previous)
+							end,
+							Confirm = function(egg, previous)
+								local uid
+								waitForSave(function(current)
+									uid = findGrantedEgg(current, egg, previous)
+									return uid ~= nil
+								end)
+								return uid
+							end,
+							Register = function(uid) tbl21.FarmPlanner.RegisterEgg(uid) end,
+							Equip = fn59,
+							Status = fn29,
+							CancelWalk = function() if tbl21.EggNavigation then tbl21.EggNavigation.Stop() end end,
+						})
 					end
+					return tbl21.EggWalker.Run(arg)
 				end
 
 				fn51 = function(maxEggs, targetUid)
@@ -2686,8 +2342,6 @@ return (function()
 							end
 
 							local ok, v80, result = pcall(fn60, v79)
-							stealAnEgg.ForceStealPosition = nil
-							fn49(false)
 							v76 = ok and result or tostring(v80)
 							if not ok then
 								break
@@ -3349,66 +3003,20 @@ return (function()
 					return true
 				end
 
-				local function fn64(forceStealPosition)
-					local v75 = fn47()
-
-					if not v75 then
-						do
-							do
-								return false, "No HumanoidRootPart"
-							end
-						end
-					else
-						local stealHeightOffset = tbl20.StealHeightOffset
-						local n31 = v75.Position + Vector3.new(0, stealHeightOffset, 0)
-						local n32 = forceStealPosition + Vector3.new(0, stealHeightOffset, 0)
-						fn49(true)
-						warn("[Fly] via height to", forceStealPosition, "from", v75.Position)
-						local v76, v77 = fn50(n31)
-
-						if not v76 then
-							fn49(false)
-							stealAnEgg.ForceStealPosition = nil
-							return false, v77
-						end
-
-						local v78, v79 = fn50(n32)
-
-						if v78 then
-							local v80, v81 = fn50(forceStealPosition)
-
-							if not v80 then
-								fn49(false)
-								stealAnEgg.ForceStealPosition = nil
-								return false, v81
-							end
-
-							stealAnEgg.ForceStealPosition = forceStealPosition
-							local n33 = os.clock() + (tbl20.StealReplicateWait or 0.75)
-
-							while os.clock() < n33 do
-								local v82 = fn47()
-
-								if v82 then
-									v82.CFrame = CFrame.new(forceStealPosition)
-									fn48(v82)
-								end
-
-								task.wait()
-							end
-
-							fn49(false)
-							stealAnEgg.ForceStealPosition = nil
-							warn("[Fly] arrived", fn47() and fn47().Position)
-							return true
-						end
-
-						do
-							fn49(false)
-							stealAnEgg.ForceStealPosition = nil
-							return false, v79
-						end
+				local function fn64(destination)
+					local root = fn47()
+					if not root then return false, "No HumanoidRootPart" end
+					local plot = tbl18.PlotCmds.GetPlotData()
+					if not plot then return false, "Waiting for own plot" end
+					local localPosition = plot.PetArea.CFrame:PointToObjectSpace(root.Position)
+					local inside = math.abs(localPosition.X) <= plot.PetArea.Size.X / 2 and math.abs(localPosition.Z) <= plot.PetArea.Size.Z / 2
+					local spawn = plot.Model:FindFirstChild("SpawnPoint")
+					if not inside and spawn and spawn:IsA("BasePart") then
+						local entrance = Vector3.new(spawn.Position.X, plot.CenterPoint.Position.Y + 3, spawn.Position.Z)
+						local arrived, reason = tbl21.WalkEggRoute(entrance, 5, 30)
+						if not arrived then return false, reason end
 					end
+					return tbl21.WalkEggRoute(destination, 5, 30)
 				end
 
 				local function fn65(arg)
@@ -3970,11 +3578,25 @@ return (function()
 			end
 
 			local function fn68()
-				pcall(function()
-					tbl19.AskDoffTreadmill:InvokeServer()
+				local ok, result, reason = pcall(function()
+					return tbl19.AskDoffTreadmill:InvokeServer()
 				end)
-
 				fn64()
+				if not ok then return false, tostring(result) end
+				if result == false then return false, tostring(reason or "Treadmill exit rejected") end
+				local deadline = os.clock() + 8
+				local stableRoot, stableSince
+				while os.clock() < deadline do
+					local root = fn47()
+					if tbl21.treadmillActiveName == nil and root and root.Parent and (not tbl21.CharacterReady or tbl21.CharacterReady()) then
+						if root ~= stableRoot then stableRoot, stableSince = root, os.clock() end
+						if os.clock() - stableSince >= 0.5 then return true end
+					else
+						stableRoot, stableSince = nil, nil
+					end
+					task.wait(0.1)
+				end
+				return false, "Treadmill exit was not confirmed"
 			end
 
 			tbl21.LeaveTraining = fn68
@@ -3999,7 +3621,7 @@ return (function()
 				fn66()
 				local v75 = fn62()
 				if not v75 then
-					return false, "No treadmill available"
+					return false, "Treadmill route: waiting for an available treadmill"
 				end
 				local v76, v77 = fn42()
 				local serverTimeNow = tbl17.Workspace:GetServerTimeNow()
@@ -4027,14 +3649,21 @@ return (function()
 				end
 
 				if tbl21.treadmillActiveName == nil then
-					return pauseFarm("Treadmill activation was not confirmed")
+					fn64()
+					return false, "Treadmill route: activation was not confirmed"
 				end
 				local flag14
+				fn29("Training speed on " .. tostring(tbl21.treadmillActiveName))
 				local trainStarted = os.clock()
 				tbl21.TrainStarted = trainStarted
 				local trainDeadline = trainStarted + math.clamp(tonumber(duration) or 20, 5, 60)
 
 				while true do
+					if tbl21.CharacterReady and not tbl21.CharacterReady() then
+						tbl21.TrainStarted = nil
+						fn64()
+						return false, "Character is not alive"
+					end
 					if os.clock() >= trainDeadline or shouldStop and shouldStop() then break end
 					local workspace_ = tbl17.Workspace
 					flag14 = false
@@ -4294,6 +3923,62 @@ Steal match:  %d (%d rules)]],
 				end
 				return true
 			end
+			local function movementInterrupted(reason)
+				return reason == "Root lost during tween"
+					or reason == "Character changed during tween"
+					or reason == "No HumanoidRootPart"
+					or reason == "Character is not alive"
+					or reason == "Character changed during egg route"
+			end
+			local function recoverMovement(reason, uid)
+				state.HaltedReason = nil
+				state.LastFailure = reason
+				state.TrainCredit = 0
+				state.StealsSinceTrain = 0
+				state.NextTrainAttempt = 0
+				state.NextStealAttempt = math.max(state.NextStealAttempt or 0, now() + 30)
+				if uid then
+					state.FailedTargets[uid] = now() + 45
+				end
+				state.Action = "Character movement interrupted; returning to speed training"
+				if context.Status then
+					context.Status("Farm Mode", state.Action)
+				end
+			end
+			local function characterReady()
+				if not context.CharacterReady or context.CharacterReady() then
+					if state.WaitingForCharacter then
+						state.WaitingForCharacter = nil
+						state.NextTrainAttempt = 0
+					end
+					return true
+				end
+				if not state.WaitingForCharacter then
+					recoverMovement("Waiting for character")
+				end
+				state.WaitingForCharacter = true
+				state.Action = "Waiting for a living character before resuming training"
+				if context.Status then
+					context.Status("Farm Mode", state.Action)
+				end
+				return false
+			end
+			local function leaveTraining()
+				if not context.LeaveTraining then
+					return true
+				end
+				local ok, reason = context.LeaveTraining()
+				if ok ~= false then
+					return true
+				end
+				state.LastFailure = tostring(reason or "Treadmill exit was not confirmed")
+				state.NextStealAttempt = math.max(state.NextStealAttempt or 0, now() + 30)
+				state.Action = "Waiting for treadmill exit before the next action"
+				if context.Status then
+					context.Status("Farm Mode", state.Action)
+				end
+				return false
+			end
 			local function budget(name, fallback, minimum, maximum)
 				local value = tonumber(config()[name]) or fallback
 				if value ~= value or value == math.huge or value == -math.huge then
@@ -4419,12 +4104,18 @@ Steal match:  %d (%d rules)]],
 						or context.HasReadyEggs and context.HasReadyEggs()
 					)
 				then
-					context.LeaveTraining()
+					if not leaveTraining() then
+						return false
+					end
 				end
 				context.Maintain()
 				state.NextMaintenance = now() + 15
+				return true
 			end
 			local function train()
+				if not characterReady() then
+					return true
+				end
 				local seconds = budget("Train Seconds", 20, 5, 60)
 				local started = now()
 				local minimumTrain = budget("Min Train Seconds", 0, 0, 600)
@@ -4475,6 +4166,10 @@ Steal match:  %d (%d rules)]],
 					return halt(context.Failure())
 				end
 				if ok == false then
+					if movementInterrupted(reason) then
+						recoverMovement(reason)
+						return true
+					end
 					if type(reason) == "string" and reason:find("Treadmill route:", 1, true) == 1 then
 						state.NextTrainAttempt = now() + (reason == "Treadmill route: Route progress" and 0 or 5)
 						state.Action = reason
@@ -4501,13 +4196,36 @@ Steal match:  %d (%d rules)]],
 						state.FailedTargets[uid] = nil
 					end
 				end
+				if movementInterrupted(state.HaltedReason) then
+					recoverMovement(state.HaltedReason)
+				end
 				if state.HaltedReason then
 					return halt(state.HaltedReason)
+				end
+				if not characterReady() then
+					return true
 				end
 				if context.Failure and context.Failure() then
 					return halt(context.Failure())
 				end
 				if now() < (state.NextTrainAttempt or 0) then
+					return true
+				end
+				if context.HasPendingDelivery and context.HasPendingDelivery() then
+					state.Action = "Returning the carried egg home before other farm actions"
+					local delivered, reason = context.ResumeDelivery()
+					if delivered then
+						state.StealsSinceTrain += 1
+						state.TrainCredit = 0
+						context.PlaceAndHatch()
+						state.NextPlace = now() + 10
+					else
+						state.LastFailure = reason
+						state.NextTrainAttempt = now() + 2
+						if context.Status then
+							context.Status("Farm Mode", state.Action)
+						end
+					end
 					return true
 				end
 				if now() >= state.NextMaintenance then
@@ -4516,8 +4234,8 @@ Steal match:  %d (%d rules)]],
 				end
 				if now() >= state.NextUpgrade and context.CanUpgradeTreadmill() then
 					state.Action = "Upgrading the treadmill before the next train session"
-					if context.LeaveTraining then
-						context.LeaveTraining()
+					if not leaveTraining() then
+						return true
 					end
 					local count, reason = context.UpgradeTreadmill()
 					if count == 0 then
@@ -4529,8 +4247,8 @@ Steal match:  %d (%d rules)]],
 				local pending = planner.PendingCount()
 				if pending > 0 and now() >= state.NextPlace then
 					state.Action = "Placing stolen eggs and hatching ready eggs"
-					if context.LeaveTraining then
-						context.LeaveTraining()
+					if not leaveTraining() then
+						return true
 					end
 					context.PlaceAndHatch()
 					state.NextPlace = now() + 10
@@ -4549,10 +4267,28 @@ Steal match:  %d (%d rules)]],
 					local target = planner.Choose(context.GetEggs())
 					if target then
 						state.Action = "Stealing " .. tostring(target.Name or target.AssetCategory)
-						if context.LeaveTraining then
-							context.LeaveTraining()
+						if not leaveTraining() then
+							return true
 						end
 						local stolen, reason = context.Steal(1, target.Uid)
+						if stolen == 0 and type(reason) == "string" and reason:find("Egg route:", 1, true) == 1 then
+							state.LastFailure = reason
+							state.FailedTargets[target.Uid] = now() + 45
+							state.NextStealAttempt = now() + 15
+							if context.HasPendingDelivery and context.HasPendingDelivery() then
+								return true
+							end
+							state.TrainCredit = 0
+							return train()
+						end
+						if stolen == 0 and context.HasPendingDelivery and context.HasPendingDelivery() then
+							state.LastFailure = reason
+							return true
+						end
+						if stolen == 0 and movementInterrupted(reason) then
+							recoverMovement(reason, target.Uid)
+							return train()
+						end
 						if stolen == 0 and reason == "Stolen 0 eggs" then
 							return train()
 						end
@@ -4561,15 +4297,16 @@ Steal match:  %d (%d rules)]],
 							and (
 								reason == "Carried egg was not confirmed in inventory"
 								or reason == "Movement is not currently trusted"
+								or reason == "Enter the gameplay area first"
 							)
 						then
 							state.FailedTargets[target.Uid] = now() + 45
-							if reason == "Movement is not currently trusted" then
+							if reason == "Movement is not currently trusted" or reason == "Enter the gameplay area first" then
 								state.NextStealAttempt = now() + 60
 							end
 							state.LastFailure = reason
 							state.TrainCredit = 0
-							state.Action = "Egg delivery not confirmed; training before the next target"
+							state.Action = "Steal unavailable; training before the next attempt"
 							if context.Status then
 								context.Status("Farm Mode", state.Action)
 							end
@@ -4597,6 +4334,9 @@ Steal match:  %d (%d rules)]],
 			end
 			function planner.Stop()
 				state.Active = false
+				if context.CancelMovement then
+					context.CancelMovement()
+				end
 			end
 			return planner
 		end
@@ -4614,22 +4354,50 @@ Steal match:  %d (%d rules)]],
 			local area = guards and guards:FindFirstChild(tostring(egg.AreaId))
 			if not area then return nil end
 			local published = area:GetAttribute("GuardEscapeSpeeds")
-			if typeof(published) == "Vector2" then return published.X end
+			local floor = typeof(published) == "Vector2" and published.X or nil
 			local cached = requiredCache[area]
-			if cached and os.clock() < cached.Expires then return cached.Value end
+			if not cached or os.clock() >= cached.Expires then
+				cached = { Values = {}, Expires = os.clock() + 5 }
+				requiredCache[area] = cached
+			end
+			local key = tostring(egg.Uid or egg.AreaId)
+			if cached.Values[key] then return cached.Values[key] end
 			if not tbl21.GuardEscapeRequirement then
 				task.wait()
 				tbl21.GuardEscapeRequirement = require(tbl17.RS.Shared.Modules.GuardAreas.GuardEscapeRequirement)
+				task.wait()
+				tbl21.GuardEscapePrediction = require(tbl17.RS.Shared.Modules.GuardAreas.GuardEscapePrediction)
+				task.wait()
+				tbl21.GuardEscapeMath = require(tbl17.RS.Shared.Utils.GuardEscape)
+				task.wait()
+				tbl21.GameplayBalance = require(tbl17.RS.Shared.Flags.GameplayBalance)
 			end
 			local guard = area:FindFirstChild("Guard")
 			local root = guard and guard:FindFirstChild("HumanoidRootPart")
 			local line = areas:FindFirstChild("SeparationLine")
-			if not root or not line then return nil end
-			local ok, value = pcall(tbl21.GuardEscapeRequirement.ResolveSpeedPower, area, root.Position, line)
-			if not ok or type(value) ~= "number" then return nil end
-			requiredCache[area] = {Value = value, Expires = os.clock() + 5}
+			local bounds = area:FindFirstChild("Bounds")
+			if not root or not line then return floor end
+			local ok, value = pcall(function()
+				local parameters = tbl21.GuardEscapeRequirement.BuildPathParameters(area, root.Position, line)
+				if egg.Position and bounds and bounds:IsA("BasePart") then
+					parameters.PlayerStartPosition = egg.Position
+					parameters.ExitDistance = tbl21.GuardEscapePrediction.ResolveExitDistance(bounds.CFrame, bounds.Size, egg.Position, parameters.ExitDirection)
+				end
+				local balance = tbl21.GameplayBalance
+				local penalty = balance.CarryPenalty
+				local perBiome = penalty.MAX_CARRY_SLOWDOWN_BY_BIOME or {}
+				local maximumSlowdown = tonumber(perBiome[tostring(egg.AreaId)]) or tonumber(penalty.MAX_CARRY_SLOWDOWN) or 0
+				local ratio = math.clamp(1 - maximumSlowdown, 0.1, 1)
+				local walkRequired = tbl21.GuardEscapePrediction.ResolvePlayerWalkSpeedRequirement(parameters, ratio)
+				local power = tbl18.TreadmillUtil.WalkSpeedToSpeedPower(walkRequired)
+				return tbl18.TreadmillUtil.RoundSpeedPowerRequirement(power * balance.GuardRequirements.REQUIREMENT_MARGIN)
+			end)
+			if not ok or type(value) ~= "number" or value ~= value or value == math.huge then return floor end
+			value = math.max(floor or 0, value)
+			cached.Values[key] = value
 			return value
 		end
+
 		local function canUpgrade()
 			local save = tbl18.Save.Peek()
 			if not save then return false end
@@ -4667,8 +4435,21 @@ Steal match:  %d (%d rules)]],
 				if not root or not humanoid or humanoid.Health <= 0 then
 					return false, "Character unavailable"
 				end
+				local function characterCurrent()
+					return player.Character == character
+						and character:FindFirstChild("HumanoidRootPart") == root
+						and root.Parent ~= nil
+						and humanoid.Parent ~= nil
+						and humanoid.Health > 0
+				end
 				local function arrived()
+					if not characterCurrent() then
+						return false
+					end
 					return predicate and predicate() or (root.Position - destination).Magnitude <= (radius or 5)
+				end
+				if context.IsActive and not context.IsActive() then
+					return false, "Cancelled"
 				end
 				if arrived() then
 					return true
@@ -4678,10 +4459,37 @@ Steal match:  %d (%d rules)]],
 					pathfinding:CreatePath({ AgentRadius = 2, AgentHeight = 5, AgentCanJump = true, WaypointSpacing = 8 })
 				local computed = pcall(path.ComputeAsync, path, root.Position, destination)
 				local points = computed and path.Status == Enum.PathStatus.Success and path:GetWaypoints() or nil
-				if path.Destroy then
-					path:Destroy()
+				local direct = false
+				local world = context.World or workspace
+				local directRay
+				if (not points or #points == 0) and world and world.Raycast and world.Blockcast then
+					direct = true
+					directRay = RaycastParams.new()
+					directRay.FilterType = Enum.RaycastFilterType.Exclude
+					directRay.FilterDescendantsInstances = { character }
+					directRay.RespectCanCollide = true
+					points = {}
+					local offset = destination - root.Position
+					local count = math.max(1, math.ceil(flat(root.Position, destination) / 12))
+					for index = 1, math.min(count, 257) do
+						table.insert(points, { Position = root.Position + offset * (index / count) })
+					end
+				end
+				local function destroyPath()
+					if path.Destroy then
+						path:Destroy()
+					end
+				end
+				if navigator.Stopped or context.IsActive and not context.IsActive() then
+					destroyPath()
+					return false, "Cancelled"
+				end
+				if not characterCurrent() then
+					destroyPath()
+					return false, "Character changed"
 				end
 				if not points or #points == 0 then
+					destroyPath()
 					return false, "No walkable path"
 				end
 				local partial = #points > 256
@@ -4689,14 +4497,16 @@ Steal match:  %d (%d rules)]],
 					points = table.move(points, 1, 256, 1, {})
 				end
 				if not partial and flat(points[#points].Position, destination) > math.max(radius or 5, 12) then
+					destroyPath()
 					return false, "Destination is not reachable"
 				end
-				local compact = {}
+				local compact, originalIndices = {}, {}
 				for index, point in ipairs(points) do
 					local previous, following = compact[#compact], points[index + 1]
 					local redundant = false
 					if
-						previous
+						not direct
+						and previous
 						and following
 						and point.Action ~= Enum.PathWaypointAction.Jump
 						and following.Action ~= Enum.PathWaypointAction.Jump
@@ -4706,6 +4516,7 @@ Steal match:  %d (%d rules)]],
 					end
 					if not redundant then
 						table.insert(compact, point)
+						originalIndices[#compact] = index
 					end
 				end
 				local reached = false
@@ -4715,11 +4526,22 @@ Steal match:  %d (%d rules)]],
 					end)
 				local lease: { [string]: any } = { Cancelled = false }
 				current = lease
+				local blockedConnection = path.Blocked
+					and path.Blocked:Connect(function(index)
+						if index >= (lease.WaypointIndex or 1) then
+							lease.Blocked = true
+						end
+					end)
 				function lease.Cancel()
 					if lease.Cancelled then
 						return
 					end
 					lease.Cancelled = true
+					if blockedConnection then
+						blockedConnection:Disconnect()
+						blockedConnection = nil
+					end
+					destroyPath()
 					if connection then
 						connection:Disconnect()
 						connection = nil
@@ -4730,7 +4552,7 @@ Steal match:  %d (%d rules)]],
 					current = nil
 					if
 						lease.LastPoint
-						and player.Character == character
+						and characterCurrent()
 						and root.Parent
 						and humanoid.Parent
 						and typeof(humanoid.WalkToPoint) == "Vector3"
@@ -4743,15 +4565,34 @@ Steal match:  %d (%d rules)]],
 				local deadline = now() + (seconds or 35)
 				local tolerance = math.clamp((humanoid.WalkSpeed or 16) * 0.08, 3, 8)
 				local function walk()
-					for _, point in ipairs(compact) do
+					for waypointIndex, point in ipairs(compact) do
+						lease.WaypointIndex = originalIndices[waypointIndex]
 						if navigator.Stopped or lease.Cancelled or context.IsActive and not context.IsActive() then
 							return false, "Cancelled"
 						end
-						if player.Character ~= character or humanoid.Health <= 0 then
+						if lease.Blocked then
+							return false, "Path blocked"
+						end
+						if not characterCurrent() then
 							return false, "Character changed"
 						end
 						if arrived() then
 							return true
+						end
+						if direct then
+							local ground =
+								world:Raycast(point.Position + Vector3.new(0, 4, 0), Vector3.new(0, -16, 0), directRay)
+							if not ground or ground.Normal.Y < 0.5 then
+								return false, "No walkable ground"
+							end
+							local height = math.max(2, humanoid.HipHeight or 2) + 1
+							point.Position = Vector3.new(point.Position.X, ground.Position.Y + height, point.Position.Z)
+							local segment = point.Position - root.Position
+							local obstacle =
+								world:Blockcast(CFrame.new(root.Position), Vector3.new(2.5, 3, 2.5), segment, directRay)
+							if obstacle then
+								return false, "Walking route blocked"
+							end
 						end
 						if point.Action == Enum.PathWaypointAction.Jump then
 							humanoid.Jump = true
@@ -4767,9 +4608,15 @@ Steal match:  %d (%d rules)]],
 									flat(root.Position, point.Position) / math.max(humanoid.WalkSpeed or 16, 1) * 2 + 2
 								)
 						)
+						local finalPoint = waypointIndex == #compact and not partial
+						local lastCommand = now()
 						while
-							flat(root.Position, point.Position) > 3
-							and not (reached and flat(root.Position, point.Position) <= tolerance)
+							(finalPoint and not arrived())
+							or (
+								not finalPoint
+								and flat(root.Position, point.Position) > 3
+								and not (reached and flat(root.Position, point.Position) <= tolerance)
+							)
 						do
 							if arrived() then
 								return true
@@ -4777,17 +4624,36 @@ Steal match:  %d (%d rules)]],
 							if navigator.Stopped or lease.Cancelled or context.IsActive and not context.IsActive() then
 								return false, "Cancelled"
 							end
-							if player.Character ~= character or humanoid.Health <= 0 then
+							if lease.Blocked then
+								return false, "Path blocked"
+							end
+							if not characterCurrent() then
 								return false, "Character changed"
 							end
 							if now() >= pointDeadline then
 								return false, "Route timed out"
 							end
+							if
+								finalPoint
+								and reached
+								and flat(root.Position, point.Position) <= tolerance
+								and now() - lastCommand >= 0.4
+							then
+								reached = false
+								lastCommand = now()
+								humanoid:MoveTo(point.Position)
+							end
 							waitFor(0.05)
+						end
+						if arrived() then
+							return true
 						end
 						waitFor()
 					end
-					return arrived(), partial and "Route progress" or "Destination not reached"
+					if arrived() then
+						return true
+					end
+					return false, partial and "Route progress" or "Destination not reached"
 				end
 				local ok, result, reason = pcall(walk)
 				lease.Cancel()
@@ -4797,6 +4663,51 @@ Steal match:  %d (%d rules)]],
 				return result, reason
 			end
 			return navigator
+		end
+		tbl21.IsTraining = function()
+			if tbl21.treadmillActiveName ~= nil then return true end
+			for index, model in ipairs(game:GetService("CollectionService"):GetTagged("ActiveTreadmill")) do
+				if index > 32 then break end
+				local id = model:GetAttribute("ActiveTreadmillId")
+				if model.Parent and type(id) == "string" and id ~= "" then return true end
+			end
+			return false
+		end
+		tbl21.CharacterReady = function()
+			local character = tbl17.LocalPlayer.Character
+			local root = character and character:FindFirstChild("HumanoidRootPart")
+			local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+			return character ~= nil and character.Parent ~= nil and root ~= nil and root.Parent == character and humanoid ~= nil and humanoid.Health > 0 and character:GetAttribute("IsTrapped") ~= true
+		end
+		tbl21.WalkEggRoute = function(destination, radius, seconds, predicate)
+			if tbl21.EggNavigation then tbl21.EggNavigation.Stop() end
+			local navigator = createNavigator({
+				Player = tbl17.LocalPlayer,
+				IsActive = function()
+					return (not tbl21.FarmPlanner or tbl21.FarmPlanner.State.Active)
+						and game:GetService("NetworkClient"):FindFirstChildOfClass("ClientReplicator") ~= nil
+				end,
+			})
+			tbl21.EggNavigation = navigator
+			local function travel()
+				local deadline = os.clock() + math.clamp(tonumber(seconds) or 45, 1, 90)
+				local reason
+				for attempt = 1, 3 do
+					local remaining = deadline - os.clock()
+					if remaining <= 0 then return false, "Route timed out" end
+					local reached
+					reached, reason = navigator.Go(destination, radius, predicate, remaining)
+					if reached then return true end
+					if reason ~= "Route timed out" and reason ~= "Route progress" and reason ~= "Destination not reached" and reason ~= "Path blocked" then break end
+					task.wait(0.1)
+				end
+				return false, reason
+			end
+			local ok, result, reason = pcall(travel)
+			navigator.Stop()
+			if tbl21.EggNavigation == navigator then tbl21.EggNavigation = nil end
+			if not ok then return false, tostring(result) end
+			return result, reason
 		end
 		tbl21.ApproachTreadmill = function()
 			if tbl21.treadmillActiveName ~= nil then return true end
@@ -4813,7 +4724,16 @@ Steal match:  %d (%d rules)]],
 			ray.FilterType = Enum.RaycastFilterType.Include
 			ray.FilterDescendantsInstances = {bottom}
 			local function reached()
-				return tbl21.treadmillActiveName ~= nil or tbl17.Workspace:Raycast(root.Position, Vector3.new(0,-8,0),ray) ~= nil
+				if tbl21.treadmillActiveName ~= nil then return true end
+				local current = fn47()
+				if not current or not current.Parent then return false end
+				if tbl17.Workspace:Raycast(current.Position, Vector3.new(0,-8,0),ray) ~= nil then return true end
+				for index, model in ipairs(game:GetService("CollectionService"):GetTagged("ActiveTreadmill")) do
+					if index > 32 then break end
+					local id = model:GetAttribute("ActiveTreadmillId")
+					if model.Parent and type(id) == "string" and id ~= "" then return true end
+				end
+				return false
 			end
 			if reached() then return true end
 			fn30("Farm Mode")
@@ -4837,6 +4757,7 @@ Steal match:  %d (%d rules)]],
 			GetSave = function() return tbl18.Save.Peek() or {} end,
 			GetStealRules = function() return stealAnEgg.StealEggs end,
 			GetPlaced = function() return tbl18.EggCmds.GetOwnerRuntimeRecords(tbl17.LocalPlayer.UserId) or {} end,
+			CharacterReady = tbl21.CharacterReady,
 			GetEggs = fn41,
 			Matches = tbl21.MatchesStealEgg,
 			RequiredSpeed = requiredSpeed,
@@ -4846,24 +4767,25 @@ Steal match:  %d (%d rules)]],
 			end,
 			Score = function(egg)
 				local asset = fn27(tbl18.AssetsDir)[egg.AssetCategory]
-				local rate = asset and tonumber(asset.EarningRate) or 1
-				local rank = asset and asset.Rarity and tonumber(asset.Rarity.Rank) or 0
-				local root = fn47()
-				local distance = root and (egg.Position - root.Position).Magnitude or 100
-				return math.log(1 + math.max(rate, 0) * math.max(tonumber(egg.AssetScale) or 1, 0.01)) * 10 + rank - math.log(1 + distance) * 2
+				local rate = asset and tonumber(asset.EarningRate) or 0
+				return math.max(rate, 0) * math.max(tonumber(egg.AssetScale) or 1, 0.01)
 			end,
 			CanUpgradeTreadmill = canUpgrade,
 			UpgradeTreadmill = function() return fn37(1) end,
 			CycleReady = fn43,
 			Maintain = fn65,
 			PlaceAndHatch = function()
+				if tbl21.IsTraining() then
+					local ok, reason = tbl21.LeaveTraining()
+					if not ok then return 0, reason end
+				end
 				fn53()
 				task.wait()
 				fn55()
 				task.wait()
 				fn53()
 			end,
-			LeaveTraining = function() if tbl21.treadmillActiveName ~= nil then tbl21.LeaveTraining() end end,
+			LeaveTraining = function() if tbl21.IsTraining() then return tbl21.LeaveTraining() end return true end,
 			HasReadyEggs = function()
 				if type(tbl18.EggState.IsReadyToHatch) ~= "function" then return false end
 				local count = 0
@@ -4880,6 +4802,12 @@ Steal match:  %d (%d rules)]],
 			Train = function(seconds, stop, keep)
 				local ok, reason, _, trained = fn63(seconds, stop, keep)
 				return ok, reason, trained
+			end,
+			HasPendingDelivery = function() return tbl21.EggWalker and tbl21.EggWalker.State.Pending ~= nil end,
+			ResumeDelivery = function() return tbl21.EggWalker.Resume() end,
+			CancelMovement = function()
+				if tbl21.EggWalker then tbl21.EggWalker.Stop() end
+				if tbl21.TreadmillNavigation then tbl21.TreadmillNavigation.Stop() end
 			end,
 			Steal = fn51,
 			Failure = function() return tbl21.FarmPausedReason end,
@@ -6513,8 +6441,8 @@ Steal match:  %d (%d rules)]],
 					tbl21.FarmPlanner.Step()
 				end)
 				if not ok then
-					stealAnEgg.ForceStealPosition = nil
-					pcall(fn49, false)
+					if tbl21.EggNavigation then tbl21.EggNavigation.Stop() end
+					if tbl21.TreadmillNavigation then tbl21.TreadmillNavigation.Stop() end
 					fn30("Recovering")
 					fn29("Retrying after an error...")
 					warn("[StealAnEgg] Main loop failed:", failure)
